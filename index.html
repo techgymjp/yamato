@@ -69,6 +69,12 @@
   #result .stats div{border:1px solid var(--line);padding:8px 10px;font-size:13px}
   #result .stats b{display:block;font-size:24px}
   .hist{border-left:3px solid var(--gold);padding-left:12px;color:#ddd5bf}
+  .share{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .share span{font-size:13px;color:var(--dim);margin-right:4px}
+  .share button{font-size:14px;padding:8px 14px}
+  .share button[data-share="x"]{background:#111;border-color:#555}
+  .share button[data-share="line"]{background:#06a046;border-color:#2fc26a}
+  .share button[data-share="fb"]{background:#1d5bbf;border-color:#4b82e0}
 
   #touch{position:fixed;left:0;right:0;bottom:190px;display:none;justify-content:space-between;padding:0 12px;pointer-events:none}
   #touch .grp{display:flex;gap:8px;pointer-events:auto}
@@ -130,13 +136,13 @@
 </div>
 <div id="br" class="hud">
   <div id="beamBox">
-    <div class="lbl"><span>波動砲</span><span id="enTxt">0%</span></div>
+    <div class="lbl"><span>レールガン</span><span id="enTxt">0%</span></div>
     <div class="bar"><i id="enBar"></i></div>
-    <div id="beamHint">充填中…</div>
+    <div id="beamHint">充電中…</div>
   </div>
   <div id="keys">
     マウス 照準／クリック長押し ミサイル連射<br>
-    右クリック・<span class="key">Space</span> 波動砲<br>
+    右クリック・<span class="key">Space</span> レールガン<br>
     <span class="key">A</span><span class="key">D</span> 転舵（雷跡をかわす）<span class="key">M</span> BGM
   </div>
 </div>
@@ -144,7 +150,7 @@
 
 <div id="touch">
   <div class="grp left"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
-  <div class="grp right"><button data-k="fire" class="fireBtn">ミサイル</button><button data-k="beam">波動砲</button><button data-k="auto">自動射撃 OFF</button></div>
+  <div class="grp right"><button data-k="fire" class="fireBtn">ミサイル</button><button data-k="beam">レールガン</button><button data-k="auto">自動射撃 OFF</button></div>
 </div>
 
 <div id="title" class="panel">
@@ -158,7 +164,7 @@
     <div class="ctl">
       <span>マウス</span><span>照準。画面をクリックすると、マウスで自由に見回せる（上空・左右・後方もOK）</span>
       <span>クリック長押し</span><span>ミサイル連射（弾数無制限・照準近くの敵機を自動追尾）</span>
-      <span>右クリック／<span class="key">Space</span></span><span>波動砲（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
+      <span>右クリック／<span class="key">Space</span></span><span>レールガン（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
       <span><span class="key">A</span><span class="key">D</span></span><span>転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
       <span><span class="key">M</span></span><span>BGM オン／オフ</span>
       <span>スマホ</span><span>画面をドラッグで照準。「ミサイル」ボタンを押したまま指をずらしても照準が動く。「自動射撃 ON」なら照準を動かすだけで連射</span>
@@ -169,7 +175,7 @@
       <span style="flex:1"></span>
       <button class="main" id="startBtn">出撃</button>
     </div>
-    <div class="note">※ 波動砲とミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。</div>
+    <div class="note">※ レールガンとミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。</div>
   </div>
 </div>
 
@@ -180,6 +186,11 @@
     <div class="stats" id="resStats"></div>
     <p class="hist" id="resHist"></p>
     <div class="btns"><button class="main" id="againBtn">再び出撃</button><button id="viewBtn">艦影を眺める</button></div>
+    <div class="share">
+      <span>結果をシェア</span>
+      <button data-share="x">X（Twitter）</button><button data-share="line">LINE</button><button data-share="fb">Facebook</button>
+      <button data-share="copy">リンクをコピー</button><button data-share="native" id="nativeShare" style="display:none">その他…</button>
+    </div>
   </div>
 </div>
 
@@ -1340,9 +1351,9 @@ function fireMissile(dir) {
 }
 
 // ============================================================
-//  波動砲（照準の方向へ即発射）
+//  レールガン（照準の方向へ即発射）
 // ============================================================
-const beamMats = [0xffffff, 0x8fe8ff, 0x2a7bff].map(c => new THREE.MeshBasicMaterial({
+const beamMats = [0xffffff, 0xc9d8ff, 0x7a5cff].map(c => new THREE.MeshBasicMaterial({
   color: c, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide
 }));
 const BEAM_LEN = 11000;
@@ -1354,7 +1365,7 @@ function fireBeam(aim) {
   const origin = ship.localToWorld(V3(0, 9, -133));
   const dir = camP.clone().addScaledVector(aim, D).sub(origin).normalize();
   const g = new THREE.Group();
-  [4, 11, 26].forEach((r, i) => g.add(new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.7, BEAM_LEN, 20, 1, true), beamMats[i].clone())));
+  [1.8, 5, 13].forEach((r, i) => g.add(new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.7, BEAM_LEN, 20, 1, true), beamMats[i].clone())));
   g.position.copy(origin).addScaledVector(dir, BEAM_LEN / 2);
   g.quaternion.setFromUnitVectors(V3(0, 1, 0), dir.clone().negate());
   scene.add(g); beams.push({ g, t: 0 });
@@ -1364,13 +1375,17 @@ function fireBeam(aim) {
     const d = rand(0, 1800);
     PA.spawn(origin.x + dir.x * d + rand(-20, 20), origin.y + dir.y * d + rand(-20, 20), origin.z + dir.z * d + rand(-20, 20), rand(-30, 30), rand(-10, 30), rand(-30, 30), rand(0.6, 1.6), 10, 30, 0.6, 0.9, 1, 0.9, 0, 1.5);
   }
+  for (let i = 0; i < 220; i++) {   // 弾道に沿って走る電光
+    const d = rand(0, 2500), o = V3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(rand(2, 9));
+    PA.spawn(origin.x + dir.x * d + o.x, origin.y + dir.y * d + o.y, origin.z + dir.z * d + o.z, o.x * 4, o.y * 4, o.z * 4, rand(0.15, 0.5), 3, 1, 0.75, 0.8, 1, 1);
+  }
   const lateral = p => { const rel = tmpV2.copy(p).sub(origin), along = rel.dot(dir); return [along, Math.sqrt(Math.max(0, rel.lengthSq() - along * along))]; };
   let n = 0;
   for (const pl of planes) {
     if (pl.state === 'falling') continue;
     const [al, lat] = lateral(pl.pos); if (al > 0 && lat < 110) { killPlane(pl, false); n++; }
   }
-  if (n) msg(`波動砲 命中！ 敵機 ${n} 機 撃墜`, 'good');
+  if (n) msg(`レールガン 命中！ 敵機 ${n} 機 撃墜`, 'good');
   for (const c of carriers) {
     if (!c.alive) continue;
     const [al, lat] = lateral(tmpV.copy(c.pos).setY(15));
@@ -1481,7 +1496,7 @@ function aimDir() {
 function tryBeam() {
   if (!G || state !== 'play') return;
   if (G.energy >= 100) fireBeam(aimDir());
-  else msg(`波動砲 充填中（${G.energy.toFixed(0)}%）`);
+  else msg(`レールガン 充電中（${G.energy.toFixed(0)}%）`);
 }
 
 // ============================================================
@@ -1674,11 +1689,11 @@ function updateHUD() {
   $('torpTxt').textContent = G.torpHits; $('bombTxt').textContent = G.bombHits; $('crashTxt').textContent = G.crashHits;
   const rem = Math.max(0, MAX_LIST - G.list);
   const lt = $('listTxt'); lt.textContent = `横転まで あと ${rem.toFixed(1)}°`; lt.style.color = rem < 10 ? '#ff6a55' : '#e9e3d2';
-  $('enTxt').textContent = G.energy >= 100 ? '120%' : G.energy.toFixed(0) + '%';
+  $('enTxt').textContent = G.energy >= 100 ? '充電完了' : G.energy.toFixed(0) + '%';
   $('enBar').style.width = G.energy + '%';
   const ready = G.energy >= 100;
   $('beamBox').classList.toggle('ready', ready);
-  $('beamHint').textContent = ready ? (document.body.classList.contains('touch') ? '発射可能！ 波動砲ボタン' : '発射可能！ 右クリック / Space') : '充填中…（撃墜でも溜まる）';
+  $('beamHint').textContent = ready ? (document.body.classList.contains('touch') ? '発射可能！ レールガンボタン' : '発射可能！ 右クリック / Space') : '充電中…（撃墜でも溜まる）';
   $('lockHint').style.display = (!locked() && !document.body.classList.contains('touch') && G.elapsed < 20) ? 'block' : 'none';
   drawIncl(); if ((hudTick++ & 1) === 0) drawRadar();
 }
@@ -1860,6 +1875,29 @@ function startGame() {
   setDaylight(1);
   msg('昭和20年4月7日 坊ノ岬沖。第一遊撃部隊、沖縄へ向かう', 'hist');
 }
+// ------------------------------------------------------------
+//  結果のシェア
+// ------------------------------------------------------------
+const SHARE_URL = 'https://techgym.jp/column/claude-code-game-yamato/';
+function shareText() {
+  const kills = G.kills + G.aaKills;
+  const head = G.endCause === 'win' ? '戦艦大和、沖縄に到達！' : `戦艦大和、${G.dist.toFixed(0)}浬を残して沈没…`;
+  return `${head}\n敵機撃墜${kills}機・空母撃沈${G.csunk}隻・被雷${G.torpHits}本・魚雷回避${G.dodged}本\n#戦艦大和天一号作戦`;
+}
+if (navigator.share) $('nativeShare').style.display = '';
+document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click', async () => {
+  const text = shareText(), u = encodeURIComponent(SHARE_URL), t = encodeURIComponent(text);
+  const kind = b.dataset.share;
+  if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, '_blank', 'noopener');
+  else if (kind === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${u}&text=${t}`, '_blank', 'noopener');
+  else if (kind === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'noopener');
+  else if (kind === 'native') { try { await navigator.share({ title: '戦艦大和 天一号作戦', text, url: SHARE_URL }); } catch (e) { /* キャンセル */ } }
+  else {
+    try { await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`); b.textContent = 'コピーしました'; }
+    catch (e) { prompt('このリンクをコピーしてください', SHARE_URL); }
+    setTimeout(() => { b.textContent = 'リンクをコピー'; }, 2000);
+  }
+}));
 $('startBtn').addEventListener('click', startGame);
 $('againBtn').addEventListener('click', startGame);
 $('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') $('result').style.display = 'flex'; }, 15000); });
