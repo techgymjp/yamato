@@ -9,85 +9,81 @@
 <style>
   :root{
     --ink:#e9e3d2; --dim:#a9a596; --red:#d8432f; --gold:#d6b25a; --cyan:#7fe3ff;
-    --panel:rgba(12,16,20,.78); --line:rgba(233,227,210,.25);
+    --panel:rgba(12,16,20,.8); --line:rgba(233,227,210,.25);
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:#11161a;color:var(--ink);
     font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;user-select:none;-webkit-user-select:none;touch-action:none}
   #game canvas{display:block}
   #overlay{position:fixed;inset:0;pointer-events:none}
-  .hud{position:fixed;pointer-events:none;text-shadow:0 1px 2px #000;display:none}
+  .hud{position:fixed;pointer-events:none;text-shadow:0 1px 3px #000;display:none}
   body.playing .hud{display:block}
-  /* 艦橋窓枠 */
-  #frame{position:fixed;inset:0;pointer-events:none;display:none}
+  #frame{position:fixed;left:0;right:0;top:0;height:7vh;pointer-events:none;display:none;background:linear-gradient(#0b0d0f,rgba(11,13,15,0))}
   body.playing #frame{display:block}
-  #frame .top{position:absolute;left:0;right:0;top:0;height:6vh;background:linear-gradient(#0b0d0f,rgba(11,13,15,.0))}
-  #frame .bot{position:absolute;left:0;right:0;bottom:0;height:5vh;background:linear-gradient(rgba(11,13,15,0),#0b0d0f)}
-  #frame .pil{position:absolute;top:0;bottom:0;width:1.1vw;background:linear-gradient(90deg,rgba(10,12,14,.15),rgba(10,12,14,.55),rgba(10,12,14,.15))}
-  #tl{left:16px;top:14px;font-size:14px;line-height:1.55}
+  #tl{left:16px;top:14px;font-size:14px;line-height:1.5}
   #tl .clock{font-size:26px;font-weight:900;letter-spacing:.05em}
-  #route{width:240px;height:8px;border:1px solid var(--line);margin:4px 0 2px;position:relative;background:rgba(0,0,0,.35)}
+  #route{width:240px;height:9px;border:1px solid var(--line);margin:4px 0 2px;position:relative;background:rgba(0,0,0,.35)}
   #routeFill{position:absolute;left:0;top:0;bottom:0;background:var(--gold)}
   #tl .ends{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);width:240px}
-  #tr{right:16px;top:14px;text-align:right;font-size:14px;line-height:1.6}
-  #tr b{font-size:20px}
-  #compassWrap{left:50%;top:10px;transform:translateX(-50%)}
-  #log{left:50%;top:62px;transform:translateX(-50%);width:min(560px,90vw);text-align:center;font-size:15px}
+  #tr{right:16px;top:14px;text-align:right;font-size:14px;line-height:1.5}
+  #tr .kills{font-size:40px;font-weight:900;line-height:1}
+  #log{left:50%;top:16px;transform:translateX(-50%);width:min(560px,60vw);text-align:center;font-size:15px}
   #log div{transition:opacity 1s;margin:2px 0}
   #log .warn{color:#ffb199} #log .good{color:#bff3c4} #log .hist{color:var(--gold)}
-  #alert{left:50%;top:34%;transform:translate(-50%,-50%);font-size:34px;font-weight:900;color:var(--red);
+  #alert{left:50%;top:30%;transform:translate(-50%,-50%);font-size:36px;font-weight:900;color:var(--red);
     letter-spacing:.12em;opacity:0;transition:opacity .25s;white-space:nowrap}
-  #bl{left:16px;bottom:16px;width:260px;font-size:13px}
-  .bar{height:9px;border:1px solid var(--line);background:rgba(0,0,0,.35);margin:2px 0 6px;position:relative}
-  .bar i{position:absolute;left:0;top:0;bottom:0;display:block}
-  .row{display:flex;justify-content:space-between}
-  #br{right:16px;bottom:16px;width:250px;font-size:13px;text-align:right}
-  #waveTxt{font-size:15px;font-weight:900;color:var(--cyan);min-height:1.4em}
-  #radarWrap{left:50%;bottom:14px;transform:translateX(-50%)}
+  #bl{left:16px;bottom:14px;width:300px}
+  #listTxt{text-align:center;font-size:15px;margin-top:-4px}
+  #br{right:16px;bottom:16px;width:270px;text-align:right}
+  #beamBox{border:1px solid var(--line);background:rgba(0,0,0,.35);padding:8px 10px}
+  #beamBox .lbl{display:flex;justify-content:space-between;font-size:14px}
+  .bar{height:12px;border:1px solid var(--line);background:rgba(0,0,0,.4);margin:5px 0;position:relative}
+  .bar i{position:absolute;left:0;top:0;bottom:0;display:block;background:linear-gradient(90deg,#2a6cff,#7fe3ff)}
+  #beamHint{font-size:13px;color:var(--dim);min-height:1.3em}
+  #beamBox.ready{border-color:var(--cyan);box-shadow:0 0 18px rgba(127,227,255,.45)}
+  #beamBox.ready #beamHint{color:var(--cyan);font-weight:900;font-size:15px}
+  #keys{margin-top:8px;color:var(--dim);font-size:12px;line-height:1.7}
+  #radarWrap{left:50%;bottom:12px;transform:translateX(-50%)}
+  #lockHint{left:50%;top:58%;transform:translateX(-50%);font-size:15px;color:#fff;background:rgba(0,0,0,.45);padding:6px 14px;border:1px solid var(--line)}
   .key{display:inline-block;border:1px solid var(--line);padding:0 5px;border-radius:3px;font-size:12px;margin:0 2px;background:rgba(255,255,255,.06)}
-  /* パネル */
   .panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;pointer-events:none}
-  .panel .box{pointer-events:auto;max-width:880px;width:100%;max-height:96vh;overflow:auto;background:var(--panel);
-    border:1px solid var(--line);padding:20px 28px;backdrop-filter:blur(3px)}
-  .title{font-size:clamp(32px,5.5vw,54px);font-weight:900;letter-spacing:.12em;line-height:1.1;margin:0}
-  .title small{display:block;font-size:.42em;letter-spacing:.5em;color:var(--gold);margin-bottom:8px}
-  .sub{color:var(--dim);font-size:13px;margin:6px 0 14px}
-  .box p{line-height:1.7;font-size:14px;margin:6px 0}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  @media (max-width:720px){.cols{grid-template-columns:1fr}}
+  .panel .box{pointer-events:auto;max-width:820px;width:100%;max-height:96vh;overflow:auto;background:var(--panel);
+    border:1px solid var(--line);padding:22px 28px;backdrop-filter:blur(3px)}
+  .title{font-size:clamp(34px,6vw,60px);font-weight:900;letter-spacing:.12em;line-height:1.1;margin:0}
+  .title small{display:block;font-size:.4em;letter-spacing:.5em;color:var(--gold);margin-bottom:8px}
+  .box p{line-height:1.75;font-size:14.5px;margin:8px 0}
   .box h3{font-size:15px;color:var(--gold);margin:14px 0 6px;letter-spacing:.1em;border-bottom:1px solid var(--line);padding-bottom:3px}
-  .box table{font-size:13px;border-collapse:collapse}
-  .box td{padding:2px 8px 2px 0;vertical-align:top}
+  .rule{font-size:18px;line-height:1.7;margin:12px 0;padding:10px 14px;border-left:4px solid var(--red);background:rgba(255,255,255,.04)}
+  .ctl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
   .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
   button{font-family:inherit;font-size:16px;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--line);
     padding:10px 22px;cursor:pointer;letter-spacing:.1em}
   button:hover{background:rgba(255,255,255,.14)}
-  button.main{background:#7a1f16;border-color:#c0473a;font-weight:900;font-size:19px}
+  button.main{background:#7a1f16;border-color:#c0473a;font-weight:900;font-size:20px;padding:12px 34px}
   button.main:hover{background:#9a2a1e}
   button.sel{outline:2px solid var(--gold)}
   .note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.7}
   #result .big{font-size:clamp(36px,7vw,68px);font-weight:900;letter-spacing:.15em;margin:0}
-  #result .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}
+  #result .sub{color:var(--dim);font-size:14px;margin:6px 0}
+  #result .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0}
   #result .stats div{border:1px solid var(--line);padding:8px 10px;font-size:13px}
-  #result .stats b{display:block;font-size:22px}
+  #result .stats b{display:block;font-size:24px}
   .hist{border-left:3px solid var(--gold);padding-left:12px;color:#ddd5bf}
-  /* タッチ操作 */
-  #touch{position:fixed;left:0;right:0;bottom:180px;display:none;justify-content:space-between;padding:0 12px;pointer-events:none}
+
+  #touch{position:fixed;left:0;right:0;bottom:190px;display:none;justify-content:space-between;padding:0 12px;pointer-events:none}
   body.playing.touch #touch{display:flex}
   #touch .grp{display:flex;gap:8px;pointer-events:auto}
-  #touch button{padding:14px 14px;font-size:15px;background:rgba(0,0,0,.45);touch-action:none}
+  #touch button{padding:16px 16px;font-size:15px;background:rgba(0,0,0,.45);touch-action:none}
   @media (max-width:720px){
-    #bl{width:190px;font-size:12px} #br{width:170px;font-size:12px} #tr{font-size:12px}
-    #tl .clock{font-size:20px} #route,#tl .ends{width:170px}
-    #compassWrap{top:auto;bottom:178px} #radarWrap{display:none!important}
-    #log{top:110px}
+    #bl{width:210px} #br{width:180px} #tr{font-size:12px} #tr .kills{font-size:28px}
+    #tl .clock{font-size:20px} #route,#tl .ends{width:160px}
+    #radarWrap{display:none!important} #keys{display:none} #log{top:96px;width:90vw}
   }
 </style>
 </head>
 <body>
 <div id="game"></div>
-<div id="frame"><div class="top"></div><div class="bot"></div>
-  <div class="pil" style="left:21%"></div><div class="pil" style="left:79%"></div></div>
+<div id="frame"></div>
 <canvas id="overlay"></canvas>
 
 <div id="tl" class="hud">
@@ -98,85 +94,58 @@
   <div class="ends"><span>坊ノ岬沖</span><span>沖縄</span></div>
 </div>
 <div id="tr" class="hud">
-  <div id="waveName">—</div>
-  <div>敵機撃墜 <b id="killTxt">0</b></div>
+  <div>敵機撃墜</div>
+  <div class="kills" id="killTxt">0</div>
   <div>敵空母撃沈 <b id="carTxt">0</b> / 6</div>
   <div>被雷 <span id="torpTxt">0</span>　被弾 <span id="bombTxt">0</span></div>
 </div>
-<div id="compassWrap" class="hud"><canvas id="compass" width="560" height="44"></canvas></div>
 <div id="log" class="hud"></div>
 <div id="alert" class="hud"></div>
+<div id="lockHint" class="hud">クリックで照準開始（マウスで自由に見回せます）</div>
 <div id="bl" class="hud">
-  <canvas id="incl" width="260" height="120"></canvas>
-  <div class="row"><span>左舷 浸水</span><span id="pfTxt">0</span></div>
-  <div class="bar"><i id="pfBar" style="background:#d8432f"></i></div>
-  <div class="row"><span>右舷 浸水（注水含む）</span><span id="sfTxt">0</span></div>
-  <div class="bar"><i id="sfBar" style="background:#4f8fd8"></i></div>
-  <div class="row"><span>予備浮力</span><span id="buoyTxt">100%</span></div>
-  <div class="bar"><i id="buoyBar" style="background:#bfae7a"></i></div>
-  <div class="row"><span>艦体耐久</span><span id="hullTxt">100%</span></div>
-  <div class="bar"><i id="hullBar" style="background:#9fc28a"></i></div>
-  <div class="row"><span id="spdTxt">第三戦速 24ノット</span><span id="rudTxt">舵 中央</span></div>
+  <canvas id="incl" width="300" height="150"></canvas>
+  <div id="listTxt">横転まで あと 30°</div>
 </div>
 <div id="br" class="hud">
-  <div id="waveTxt"></div>
-  <div class="row"><span>波動砲</span><span id="enTxt">0%</span></div>
-  <div class="bar"><i id="enBar" style="background:linear-gradient(90deg,#2a6cff,#7fe3ff)"></i></div>
-  <div class="row"><span>対空ロケット弾</span><span id="ammoTxt">40</span></div>
-  <div class="bar"><i id="ammoBar" style="background:#e0a03c"></i></div>
-  <div class="row"><span>注排水（右舷注水）</span><span id="cfTxt">可</span></div>
-  <div style="margin-top:6px;color:var(--dim);font-size:11.5px;line-height:1.6">
-    <span class="key">A</span><span class="key">D</span>転舵 <span class="key">W</span><span class="key">S</span>速力<br>
-    クリック ロケット <span class="key">Space</span>長押し 波動砲<br>
-    <span class="key">F</span>注排水 <span class="key">Q</span><span class="key">E</span>見張り方向 <span class="key">R</span>正面
+  <div id="beamBox">
+    <div class="lbl"><span>波動砲</span><span id="enTxt">0%</span></div>
+    <div class="bar"><i id="enBar"></i></div>
+    <div id="beamHint">充填中…</div>
+  </div>
+  <div id="keys">
+    マウス 照準／クリック長押し ミサイル連射<br>
+    右クリック・<span class="key">Space</span> 波動砲<br>
+    <span class="key">A</span><span class="key">D</span> 転舵（雷跡をかわす）<span class="key">M</span> BGM
   </div>
 </div>
 <div id="radarWrap" class="hud"><canvas id="radar" width="170" height="170"></canvas></div>
 
 <div id="touch">
-  <div class="grp">
-    <button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button>
-    <button data-k="lookL">左見</button><button data-k="lookR">右見</button>
-  </div>
-  <div class="grp">
-    <button data-k="cf">注水</button><button data-k="spdDn">減速</button><button data-k="spdUp">増速</button>
-    <button data-k="fire">射撃</button><button data-k="beam">波動砲</button>
-  </div>
+  <div class="grp"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
+  <div class="grp"><button data-k="fire">ミサイル</button><button data-k="beam">波動砲</button></div>
 </div>
 
 <div id="title" class="panel">
   <div class="box">
     <h1 class="title"><small>昭和二十年四月七日</small>戦艦大和<br>天一号作戦</h1>
-    <div class="sub">艦長として大和を沖縄まで導け</div>
-    <div class="cols">
-      <div>
-        <h3>作戦概要</h3>
-        <p>昭和20年（1945年）4月1日、米軍が沖縄本島に上陸した。連合艦隊は「天一号作戦」を発令し、戦艦大和を旗艦とする第二艦隊（第一遊撃部隊：大和、軽巡洋艦矢矧、駆逐艦8隻）に沖縄への海上特攻を命じた。</p>
-        <p>目標は沖縄西方へ突入し、陸岸にのし上げて浮砲台となり敵上陸部隊を撃つこと。司令長官は伊藤整一中将、大和艦長は有賀幸作大佐。</p>
-        <p>4月6日15時20分、徳山沖を出撃。豊後水道で米潜水艦に発見される。7日朝、駆逐艦朝霜が機関故障で落伍。12時30分過ぎ、低い雲の下から米第58任務部隊の艦載機の大編隊が襲いかかる——。</p>
-      </div>
-      <div>
-        <h3>任務と危機</h3>
-        <p>米軍機は大和の<b>転覆</b>を狙い、<b style="color:#ff8b78">左舷</b>に雷撃・爆撃・ロケット攻撃を集中してくる。史実の大和は左舷から浸水し、左へ横転して沈んだ。</p>
-        <p>傾斜が <b>30°</b> に達すると横転、沈没する。転舵で雷跡をかわし、<b>注排水</b>（右舷注水）で傾斜を戻せ。ただし注水するたびに予備浮力と速力が減る。</p>
-        <h3>操作</h3>
-        <table>
-          <tr><td><span class="key">A</span><span class="key">D</span>/<span class="key">←</span><span class="key">→</span></td><td>取舵・面舵（転舵）</td></tr>
-          <tr><td><span class="key">W</span><span class="key">S</span></td><td>速力の増減</td></tr>
-          <tr><td>マウス・クリック</td><td>照準・ロケット弾で敵機を迎撃（長押しで連射）</td></tr>
-          <tr><td><span class="key">Space</span>長押し→離す</td><td>波動砲。艦首方向に発射。敵空母を撃沈せよ</td></tr>
-          <tr><td><span class="key">F</span></td><td>注排水（右舷に注水して傾斜を戻す）</td></tr>
-          <tr><td><span class="key">Q</span><span class="key">E</span>・画面端</td><td>見張りの向きを左右に変える　<span class="key">R</span>正面</td></tr>
-        </table>
-      </div>
+    <p>昭和20年4月、沖縄へ向かう戦艦大和に、米第58任務部隊の艦載機が雲霞のごとく襲いかかる。米軍機は大和を転覆させるため、<b style="color:#ff8b78">左舷</b>に魚雷と爆弾を集中してくる——。</p>
+    <div class="rule">敵機の猛攻に耐え抜き、沖縄までたどり着け。<br>
+      <b style="color:#ff8b78">左への傾斜が30°に達したら横転・沈没</b>で終わり。</div>
+    <h3>操作</h3>
+    <div class="ctl">
+      <span>マウス</span><span>照準。画面をクリックすると、マウスで自由に見回せる（上空・左右・後方もOK）</span>
+      <span>クリック長押し</span><span>ミサイル連射（弾数無制限・照準近くの敵機を自動追尾）</span>
+      <span>右クリック／<span class="key">Space</span></span><span>波動砲（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
+      <span><span class="key">A</span><span class="key">D</span></span><span>転舵。魚雷の白い航跡をかわせ</span>
+      <span><span class="key">M</span></span><span>BGM オン／オフ</span>
     </div>
     <div class="btns">
       <span style="font-size:14px;color:var(--dim)">難易度</span>
-      <button data-diff="0.6">易</button><button data-diff="1" class="sel">普通</button><button data-diff="1.4">史実</button>
+      <button data-diff="0.7">易</button><button data-diff="1" class="sel">普通</button><button data-diff="1.4">史実</button>
       <span style="flex:1"></span>
       <button class="main" id="startBtn">出撃</button>
     </div>
-    <div class="note">※ 波動砲と対空ロケット弾はゲーム独自の架空兵装です。出撃時刻・艦隊編成・攻撃開始時刻・左舷への集中攻撃・沈没時刻（14時23分）などは史実に基づいています。敵空母6隻は第58任務部隊の第1・第3・第4群を表しています。</div>
+    <div class="note">※ 波動砲とミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。</div>
   </div>
 </div>
 
@@ -373,7 +342,7 @@ class Particles {
   }
 }
 const PN = new Particles(11000, false);   // 煙・泡・水柱
-const PA = new Particles(5000, true);     // 炎・閃光・曳光弾
+const PA = new Particles(9000, true);     // 炎・閃光・曳光弾
 
 function explosion(p, s = 1, smoke = true) {
   for (let i = 0; i < 26 * Math.min(s, 3); i++) {
@@ -576,20 +545,41 @@ const PLANE_TYPES = {
   dive: { name: 'SB2C ヘルダイバー', short: '爆', color: '#ffa13a', span: 15, len: 11, fat: 1.05 },
   fighter: { name: 'F6F ヘルキャット', short: '戦', color: '#ffe066', span: 13, len: 10, fat: 1.0 },
 };
-function makePlane(type) {
+// 機体を1つのジオメトリに焼き込む（大量の敵機を描画するため）
+function bakeGroup(group) {
+  group.updateMatrixWorld(true);
+  const pos = [], nor = [], col = [];
+  group.traverse(o => {
+    if (!o.isMesh) return;
+    const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    g.applyMatrix4(o.matrixWorld);
+    const c = o.material.color, p = g.attributes.position, n = g.attributes.normal;
+    for (let i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(n.getX(i), n.getY(i), n.getZ(i)); col.push(c.r, c.g, c.b); }
+  });
+  const bg = new THREE.BufferGeometry();
+  bg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  bg.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  bg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  return bg;
+}
+const planeVMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+const PLANE_GEO = {};
+for (const type of Object.keys(PLANE_TYPES)) {
   const T = PLANE_TYPES[type], g = new THREE.Group(), f = T.fat;
   const fus = cyl(0.75 * f, 0.95 * f, T.len, MAT.plane, 0, 0, 0, g, 8); fus.rotation.x = Math.PI / 2;
   const nose = cyl(0.95 * f, 0.6 * f, 1.2, MAT.dark, 0, 0, T.len / 2 + 0.5, g, 8); nose.rotation.x = Math.PI / 2;
   box(T.span, 0.28, 2.6, MAT.plane, 0, -0.35, 1.2, g);
   box(T.span * 0.33, 0.22, 1.4, MAT.plane, 0, 0.1, -T.len / 2 + 0.6, g);
   box(0.22, 2.0, 1.6, MAT.plane, 0, 1.0, -T.len / 2 + 0.6, g);
-  box(1.4, 1.0, 2.6, MAT.planeLight, 0, 0.9 * f, 1.2, g); // 風防
-  for (const s of [-1, 1]) { const st = new THREE.Mesh(new THREE.CircleGeometry(0.8, 10), MAT.white); st.rotation.x = Math.PI / 2; st.position.set(s * T.span * 0.33, -0.5, 1.2); g.add(st); }
-  if (type === 'torp') { const tp = cyl(0.3, 0.3, 4.6, MAT.dark, 0, -1.3, 1, g, 6); tp.rotation.x = Math.PI / 2; g.userData.payload = tp; }
-  if (type === 'dive') { const b = cyl(0.35, 0.35, 2, MAT.dark, 0, -1.1, 1, g, 6); b.rotation.x = Math.PI / 2; g.userData.payload = b; }
-  const prop = new THREE.Mesh(new THREE.CircleGeometry(1.7, 12), new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.25, side: THREE.DoubleSide }));
-  prop.position.z = T.len / 2 + 1.2; g.add(prop);
-  return g;
+  box(1.4, 1.0, 2.6, MAT.planeLight, 0, 0.9 * f, 1.2, g);
+  for (const s of [-1, 1]) box(1.5, 0.3, 1.5, MAT.white, s * T.span * 0.33, -0.3, 1.2, g);
+  PLANE_GEO[type] = bakeGroup(g);
+}
+function makePlane(type) {
+  const m = new THREE.Mesh(PLANE_GEO[type], planeVMat);
+  if (type === 'torp') { const tp = cyl(0.3, 0.3, 4.6, MAT.dark, 0, -1.3, 1, m, 6); tp.rotation.x = Math.PI / 2; m.userData.payload = tp; }
+  if (type === 'dive') { const b = cyl(0.35, 0.35, 2, MAT.dark, 0, -1.1, 1, m, 6); b.rotation.x = Math.PI / 2; m.userData.payload = b; }
+  return m;
 }
 const bombGeo = new THREE.CylinderGeometry(0.4, 0.4, 2.2, 6).rotateX(Math.PI / 2);
 const rocketGeo = new THREE.CylinderGeometry(0.15, 0.15, 1.8, 5).rotateX(Math.PI / 2);
@@ -633,19 +623,102 @@ const AU = {
     o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
   },
   boom(dist = 0, big = 1) { const k = clamp(1 - dist / 4000, 0.05, 1); this.noise(1.2 + big, 900 * k + 100, 40, 0.9 * k * big); },
-  rocket() { this.noise(0.4, 2600, 500, 0.09, 'bandpass', 1.2); },
+  rocket() { this.noise(0.3, 2600, 500, 0.045, 'bandpass', 1.2); },
+  mg(k) { this.noise(0.07, 2500, 900, 0.12 * k, 'bandpass', 0.8); },
+  ping() { this.tone('triangle', 2400, 1200, 0.08, 0.05); this.noise(0.05, 4000, 2000, 0.08, 'highpass'); },
   alarm() { this.tone('square', 880, 880, 0.14, 0.06); this.tone('square', 660, 660, 0.14, 0.06, 0.18); },
   charge() { this.tone('sawtooth', 70, 1400, 2.0, 0.12); this.tone('sine', 140, 2200, 2.0, 0.12); },
   beam() { this.noise(3.5, 5000, 60, 1.0); this.tone('sawtooth', 220, 40, 2.5, 0.25); this.tone('sine', 900, 120, 2.0, 0.2); },
 };
 
+
 // ============================================================
-//  シーンオブジェクトの生成
+//  BGM（荘厳な管弦楽風・WebAudioでリアルタイム合成／オリジナル曲）
+// ============================================================
+const BGM = {
+  on: true, playing: false, bar: 0, BAR: 60 / 62 * 4,
+  // ニ短調：Dm - B♭ - Gm - A / Dm - F - Gm - A
+  CHORDS: [
+    [38, 50, 53, 57, 62], [34, 46, 53, 58, 62], [43, 50, 55, 58, 62], [45, 52, 57, 61, 64],
+    [38, 50, 53, 57, 62], [41, 48, 53, 57, 60], [43, 50, 55, 58, 62], [45, 52, 57, 61, 64],
+  ],
+  // [音, 開始拍, 長さ]
+  MELODY: [
+    [[62, 0, 2], [65, 2, 1], [64, 3, 1]], [[62, 0, 3], [58, 3, 1]], [[67, 0, 2], [65, 2, 1], [62, 3, 1]], [[64, 0, 4]],
+    [[69, 0, 2], [67, 2, 1], [65, 3, 1]], [[72, 0, 2], [69, 2, 2]], [[70, 0, 2], [67, 2, 1], [65, 3, 1]], [[64, 0, 2], [61, 2, 2]],
+  ],
+  start() {
+    if (!AU.ctx || this.playing) return;
+    const c = AU.ctx; this.playing = true;
+    this.out = c.createGain(); this.out.gain.value = this.on ? 0.33 : 0;
+    const rev = c.createConvolver(), len = c.sampleRate * 3.8, buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    rev.buffer = buf;
+    const wet = c.createGain(); wet.gain.value = 0.6;
+    this.out.connect(AU.master); this.out.connect(rev); rev.connect(wet); wet.connect(AU.master);
+    this.nextT = c.currentTime + 0.15; this.bar = 0;
+    this.timer = setInterval(() => this.sched(), 250);
+  },
+  setOn(v) { this.on = v; if (this.out) this.out.gain.setTargetAtTime(v ? 0.33 : 0, AU.ctx.currentTime, 0.3); },
+  fade(v, tc = 1.5) { if (this.out && this.on) this.out.gain.setTargetAtTime(v, AU.ctx.currentTime, tc); },
+  sched() {
+    const c = AU.ctx;
+    while (this.nextT < c.currentTime + 1.2) { this.playBar(this.bar, this.nextT); this.nextT += this.BAR; this.bar++; }
+  },
+  hz: n => 440 * Math.pow(2, (n - 69) / 12),
+  voice(type, freq, t, dur, gain, cutoff, att, rel, detune = 0, vib = 0) {
+    const c = AU.ctx, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = type; o.frequency.value = freq; o.detune.value = detune;
+    if (vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5.2; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(vib, t + 0.6); l.connect(lg); lg.connect(o.detune); l.start(t); l.stop(t + dur + rel + 0.1); }
+    f.type = 'lowpass'; f.frequency.value = cutoff; f.Q.value = 0.6;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + att);
+    g.gain.setValueAtTime(gain, t + dur); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + rel);
+    o.connect(f); f.connect(g); g.connect(this.out); o.start(t); o.stop(t + dur + rel + 0.1);
+  },
+  timpani(t, n, gain) {
+    const c = AU.ctx, o = c.createOscillator(), g = c.createGain(), f0 = this.hz(n);
+    o.type = 'sine'; o.frequency.setValueAtTime(f0 * 1.6, t); o.frequency.exponentialRampToValueAtTime(f0, t + 0.08);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    o.connect(g); g.connect(this.out); o.start(t); o.stop(t + 1.7);
+    const s = c.createBufferSource(); s.buffer = AU.noiseBuf; const lf = c.createBiquadFilter(); lf.type = 'lowpass'; lf.frequency.value = 260;
+    const ng = c.createGain(); ng.gain.setValueAtTime(gain * 0.8, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+    s.connect(lf); lf.connect(ng); ng.connect(this.out); s.start(t, Math.random()); s.stop(t + 0.4);
+  },
+  playBar(bar, t) {
+    const i = bar % 8, loop = Math.floor(bar / 8), B = this.BAR, beat = B / 4;
+    const ch = this.CHORDS[i];
+    // 弦楽（パッド）
+    ch.forEach((n, k) => {
+      const g = k === 0 ? 0.05 : 0.026;
+      for (const dt of [-7, 7]) this.voice('sawtooth', this.hz(n), t, B - 0.2, g, k === 0 ? 500 : 1300, 1.0, 1.6, dt);
+    });
+    // コントラバス
+    this.voice('triangle', this.hz(ch[0] - 12), t, B - 0.3, 0.12, 300, 0.4, 1.0);
+    // 合唱風（2巡目以降）
+    if (loop >= 1) ch.slice(2).forEach(n => this.voice('triangle', this.hz(n + 12), t, B - 0.2, 0.022, 1800, 1.5, 1.8, 0, 6));
+    // 金管の旋律
+    const brassOct = loop % 2 === 1 ? 12 : 0;
+    for (const [n, s, d] of this.MELODY[i]) {
+      const st = t + s * beat, du = d * beat - 0.05;
+      this.voice('sawtooth', this.hz(n + brassOct - 12), st, du, 0.06, 1500, 0.12, 0.5, 0, 9);
+      this.voice('square', this.hz(n + brassOct - 12), st, du, 0.025, 1100, 0.15, 0.5, 4, 9);
+      if (loop >= 2) this.voice('sawtooth', this.hz(n + brassOct), st, du, 0.03, 2200, 0.2, 0.6, -5, 10);
+    }
+    // ティンパニ
+    this.timpani(t, ch[0] < 40 ? ch[0] + 12 : ch[0], 0.5);
+    this.timpani(t + beat * 2, ch[0] < 40 ? ch[0] + 12 : ch[0], 0.25);
+    if (i === 3 || i === 7) for (let k = 0; k < 8; k++) this.timpani(t + beat * 2 + k * beat / 4, 45, 0.08 + k * 0.04);
+  },
+};
+
+// ============================================================
+//  シーンオブジェクト
 // ============================================================
 const ship = makeYamato();
 ship.rotation.order = 'YXZ';
 scene.add(ship);
-const head = new THREE.Object3D(); head.position.set(0, Y_FB + 35.4, -23.6); ship.add(head);
+// 視点：艦橋最上部の防空指揮所（史実でも有賀艦長はここで指揮した）
+const head = new THREE.Object3D(); head.position.set(0, Y_FB + 46.5, -16); ship.add(head);
 
 const ESCORT_DEF = [
   { name: '矢矧', L: 174, B: 15.2, f: 1, cr: true, ang: 0 },
@@ -657,7 +730,6 @@ const escorts = ESCORT_DEF.map(d => {
   const r = d.cr ? 1700 : 1500;
   return { ...d, mesh: m, ox: Math.sin(d.ang * DEG) * r, oz: -Math.cos(d.ang * DEG) * r, sinking: 0, alive: true, pos: V3(), hd: 0 };
 });
-
 const CARRIER_DEF = [
   { name: 'ホーネット', tg: '第58.1群', b: -28, d: 5200 },
   { name: 'ベニントン', tg: '第58.1群', b: -40, d: 6200 },
@@ -672,15 +744,13 @@ let island = null;
 // ============================================================
 //  ゲーム状態
 // ============================================================
-const SPEEDS = [[12, '原速'], [16, '強速'], [20, '第一戦速'], [24, '第三戦速'], [27, '最大戦速']];
-const TOTAL_NM = 240, COURSE = 190;   // 坊ノ岬沖→沖縄 / 針路190°
-const MAX_LIST = 30, MAX_FLOOD = 160;
-let G = null, T = 0;
-let planes = [], torps = [], bombs = [], eRockets = [], pRockets = [], emitters = [], beams = [];
-const keys = {};
+const TOTAL_NM = 240, COURSE = 190, MAX_LIST = 30;
+const DURATION = 300;             // 沖縄まで（実時間・秒）
+const MIN_PER_SEC = 1.27;         // 時計の進み
+let G = null, T = 0, state = 'title', diff = 1;
+let planes = [], torps = [], bombs = [], eRockets = [], pRockets = [], emitters = [], beams = [], impacts = [];
+const keys = {}, touchHold = {};
 const mouse = { x: 0, y: 0, down: false, sx: innerWidth / 2, sy: innerHeight / 2 };
-const touchHold = {};
-let diff = 1;
 
 function newGame() {
   for (const p of planes) scene.remove(p.mesh);
@@ -688,21 +758,19 @@ function newGame() {
   for (const b of beams) scene.remove(b.g);
   for (const c of carriers) scene.remove(c.mesh);
   if (island) { scene.remove(island); island = null; }
-  planes = []; torps = []; bombs = []; eRockets = []; pRockets = []; emitters = []; beams = [];
+  planes = []; torps = []; bombs = []; eRockets = []; pRockets = []; emitters = []; beams = []; impacts = [];
   PN.life.fill(0); PA.life.fill(0);
   carriers = CARRIER_DEF.map((d, i) => {
     const m = makeCarrier(); scene.add(m);
     return { ...d, b: d.b * DEG, mesh: m, alive: true, sink: 0, phase: i * 1.7, pos: V3() };
   });
   G = {
-    clock: 12 * 60 + 20, dist: TOTAL_NM, heading: 0, turnRate: 0, speedIdx: 3, speed: 24, pos: V3(0, 0, 0), vel: V3(),
-    port: 0, star: 0, list: 0, hull: 100, cfCount: 0, cfCool: 0, aa: 1,
-    energy: 55, charging: false, charge: 0,
-    ammo: 40, fireCool: 0, idle: 0, side: 1,
-    kills: 0, aaKills: 0, csunk: 0, torpHits: 0, bombHits: 0,
-    wave: 0, nextWaveT: 9.5, spawnQ: [], waveEnded: false, timeMul: 1,
-    yaw: 0, pitch: -0.07, shake: 0, flash: 0, alertT: 0,
-    histDone: {}, startT: T, endT: 0, endCause: '', endClock: 0,
+    elapsed: 0, clock: 12 * 60 + 20, dist: TOTAL_NM, heading: 0, turnRate: 0, speed: 24, pos: V3(), vel: V3(),
+    list: 0, listT: 0, energy: 40,
+    fireCool: 0, side: 0, spawnT: 6, mgSnd: 0, pingT: 0,
+    kills: 0, aaKills: 0, csunk: 0, torpHits: 0, bombHits: 0, maxList: 0,
+    yaw: 0, pitch: -0.05, shake: 0, flash: 0, alertT: 0, histDone: {},
+    endCause: '', endClock: 0,
   };
   for (const e of escorts) {
     e.alive = true; e.sinking = 0; e.mesh.visible = true;
@@ -719,57 +787,44 @@ function fwdV(h = G.heading) { return tmpV.set(-Math.sin(h), 0, -Math.cos(h)); }
 function toLocal(p) { const dx = p.x - G.pos.x, dz = p.z - G.pos.z, c = Math.cos(G.heading), s = Math.sin(G.heading); return { x: dx * c - dz * s, z: dx * s + dz * c }; }
 function fromLocal(lx, ly, lz, out = V3()) { const c = Math.cos(G.heading), s = Math.sin(G.heading); return out.set(G.pos.x + lx * c + lz * s, ly, G.pos.z - lx * s + lz * c); }
 function routePos(b, d, out = V3()) { return out.set(G.pos.x + Math.sin(b) * d, 0, G.pos.z - Math.cos(b) * d); }
-function bearingOf(p) { const dx = p.x - G.pos.x, dz = p.z - G.pos.z; return Math.atan2(dx, -dz); } // 経路基準（時計回り）
-function compassOf(rb) { return ((COURSE + rb / DEG) % 360 + 360) % 360; }
+function bearingOf(p) { const dx = p.x - G.pos.x, dz = p.z - G.pos.z; return Math.atan2(dx, -dz); }
 function fmtClock(m) { m = Math.floor(m); const d = Math.floor(m / 1440); m %= 1440; return { d, s: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}` }; }
 
-// ============================================================
-//  メッセージ
-// ============================================================
 function msg(text, cls = '') {
   const el = document.createElement('div'); el.textContent = text; if (cls) el.className = cls;
   const log = $('log'); log.prepend(el);
-  while (log.children.length > 4) log.lastChild.remove();
-  setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 1000); }, 5500);
+  while (log.children.length > 3) log.lastChild.remove();
+  setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 1000); }, 4500);
 }
-function alertMsg(text) { const a = $('alert'); a.textContent = text; a.style.opacity = 1; G.alertT = 2.2; }
+function alertMsg(text, t = 1.8) { const a = $('alert'); a.textContent = text; a.style.opacity = 1; G.alertT = t; }
 
 // ============================================================
-//  敵機
+//  敵機（途切れなく大量に来襲）
 // ============================================================
-function spawnWave() {
-  G.wave++;
-  const alive = carriers.filter(c => c.alive).length;
-  const n = Math.round((2.5 + alive * 1.3 + Math.min(G.wave, 6) * 0.6) * diff);
-  const comp = [];
-  for (let i = 0; i < n; i++) { const r = Math.random(); comp.push(r < 0.42 ? 'torp' : r < 0.72 ? 'dive' : 'fighter'); }
-  comp.forEach((t, i) => G.spawnQ.push({ t: T + i * rand(0.5, 1.1), type: t }));
-  const names = ['第一次', '第二次', '第三次', '第四次', '第五次', '第六次', '第七次', '第八次', '第九次', '第十次'];
-  const nm = (names[G.wave - 1] || `第${G.wave}次`) + '攻撃隊';
-  $('waveName').textContent = nm;
-  msg(`${fmtClock(G.clock).s} 敵機来襲！ ${nm} 約${n * 6}機（左舷方向）`, 'warn');
-  alertMsg('対空戦闘 用意！');
-  AU.alarm();
-}
-function spawnPlane(type) {
-  const portSide = Math.random() < 0.88 ? -1 : 1;    // 左舷(-X)に集中
-  const T0 = PLANE_TYPES[type];
+function progress() { return clamp(G.elapsed / DURATION, 0, 1); }
+function maxPlanes() { return Math.round((26 + 50 * progress()) * diff * (1 - 0.08 * G.csunk)); }
+function spawnGroup() {
+  const r = Math.random();
+  const type = r < 0.27 ? 'torp' : r < 0.52 ? 'dive' : 'fighter';
+  const n = type === 'fighter' ? 3 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 3);
+  const portSide = Math.random() < 0.85 ? -1 : 1;   // 左舷(-X)に集中
   let lx, lz, y;
-  if (type === 'dive') { const a = portSide < 0 ? rand(-150, -30) : rand(30, 150); lx = Math.sin(a * DEG) * 3200; lz = -Math.cos(a * DEG) * 3200; y = rand(950, 1080); }
-  else { lx = portSide * rand(2600, 3200); lz = rand(-1800, 1200); y = type === 'torp' ? rand(600, 800) : rand(500, 700); }
-  const p = fromLocal(lx, y, lz);
+  if (type === 'dive') { const a = portSide < 0 ? rand(-160, -20) : rand(20, 160); lx = Math.sin(a * DEG) * 2600; lz = -Math.cos(a * DEG) * 2600; y = rand(950, 1080); }
+  else { lx = portSide * rand(2200, 2700); lz = rand(-1600, 1200); y = type === 'torp' ? rand(500, 750) : rand(400, 650); }
+  for (let i = 0; i < n; i++) spawnPlane(type, portSide, fromLocal(lx + rand(-60, 60) * i, y + rand(-30, 30), lz + i * 45));
+}
+function spawnPlane(type, side, p) {
   const mesh = makePlane(type); scene.add(mesh);
-  const pl = { type, T: T0, mesh, pos: p, vel: V3(), speed: type === 'fighter' ? 130 : type === 'dive' ? 105 : 95, side: portSide, state: 'approach', t: 0, rockets: 4, rcool: 0, passes: 0, bank: 0, aimLZ: rand(-90, 70), hp: 1 };
+  const pl = { type, T: PLANE_TYPES[type], mesh, pos: p, vel: V3(), speed: type === 'fighter' ? 135 : type === 'dive' ? 110 : 100,
+    side, state: 'approach', t: 0, life: 0, rockets: 4, rcool: 0, mgCool: rand(0, 0.3), bank: 0, aimLZ: rand(-95, 75), bridge: Math.random() < 0.35 };
   pl.vel.copy(G.pos).sub(p).setY(0).normalize().multiplyScalar(pl.speed);
   planes.push(pl);
 }
 function steer(pl, desired, rate, dt) {
-  const cur = tmpV2.copy(pl.vel).normalize();
-  const d = desired.clone().normalize();
-  const ang = cur.angleTo(d);
-  const prevX = cur.x, prevZ = cur.z;
-  if (ang > 1e-4) { const k = Math.min(1, rate * dt / ang); cur.lerp(d, k).normalize(); }
-  const turn = (prevX * cur.z - prevZ * cur.x) / Math.max(dt, 1e-3);
+  const cur = tmpV2.copy(pl.vel).normalize(), d = desired.clone().normalize();
+  const ang = cur.angleTo(d), px = cur.x, pz = cur.z;
+  if (ang > 1e-4) cur.lerp(d, Math.min(1, rate * dt / ang)).normalize();
+  const turn = (px * cur.z - pz * cur.x) / Math.max(dt, 1e-3);
   pl.bank = lerp(pl.bank, clamp(turn * 1.2, -1.2, 1.2), Math.min(1, dt * 4));
   pl.vel.copy(cur).multiplyScalar(pl.speed);
 }
@@ -786,45 +841,52 @@ function intercept(from, spd) {
 function killPlane(pl, byAA) {
   if (pl.state === 'falling') return;
   pl.state = 'falling'; pl.t = 0;
-  explosion(pl.pos, 1.2);
-  AU.boom(pl.pos.distanceTo(camera.position) * 0.6, 0.5);
-  if (byAA) G.aaKills++; else G.kills++;
+  explosion(pl.pos, 1.3);
+  AU.boom(pl.pos.distanceTo(camera.position) * 0.6, 0.45);
+  if (byAA) G.aaKills++; else { G.kills++; G.energy = Math.min(100, G.energy + 1.2); }
+}
+function enemyMG(pl, aimP) {
+  // 機銃掃射：曳光弾が霰のように降り注ぐ
+  const right = tmpV.set(1, 0, 0).applyQuaternion(pl.mesh.quaternion);
+  const s = (pl.side2 = -(pl.side2 || 1));
+  const from = pl.pos.clone().addScaledVector(right, s * 3.5);
+  const tgt = aimP.clone().add(V3(rand(-9, 9), rand(-3, 6), rand(-9, 9)));
+  const dist = from.distanceTo(tgt), tt = dist / 880;
+  tgt.addScaledVector(G.vel, tt);
+  const v = tgt.clone().sub(from).normalize().multiplyScalar(880);
+  PA.spawn(from.x, from.y, from.z, v.x, v.y, v.z, tt, 2.8, 2.8, 1, 0.42, 0.2, 1);
+  impacts.push({ t: T + tt, p: tgt });
 }
 function updatePlanes(dt) {
   const shipC = G.pos;
   for (let i = planes.length - 1; i >= 0; i--) {
-    const pl = planes[i]; pl.t += dt;
+    const pl = planes[i]; pl.t += dt; pl.life += dt;
     const p = pl.pos, hd = Math.hypot(p.x - shipC.x, p.z - shipC.z);
     let desired = null, rate = 0.9;
     if (pl.state === 'falling') {
       pl.vel.y -= 25 * dt; pl.vel.multiplyScalar(1 - 0.15 * dt);
       p.addScaledVector(pl.vel, dt);
-      PA.spawn(p.x, p.y, p.z, 0, 0, 0, 0.5, 4, 9, 1, 0.5, 0.15, 0.9);
-      PN.spawn(p.x, p.y, p.z, rand(-1, 1), 2, rand(-1, 1), 3.5, 5, 16, 0.12, 0.12, 0.12, 0.7);
+      PA.spawn(p.x, p.y, p.z, 0, 0, 0, 0.45, 4, 9, 1, 0.5, 0.15, 0.9);
+      PN.spawn(p.x, p.y, p.z, rand(-1, 1), 2, rand(-1, 1), 3, 5, 16, 0.12, 0.12, 0.12, 0.7);
       pl.mesh.rotateZ(dt * 3); pl.mesh.position.copy(p);
       if (p.y <= 0) { splash(p, 1.4); scene.remove(pl.mesh); planes.splice(i, 1); }
       continue;
     }
     if (pl.type === 'torp') {
       if (pl.state === 'approach') {
-        const tgt = fromLocal(pl.side * 1300, 0, -G.speed * 6);
-        desired = altDesired(tgt.clone().sub(p), p, 38, 200, -0.45, 0.3);
-        if (Math.hypot(tgt.x - p.x, tgt.z - p.z) < 450 && p.y < 120) pl.state = 'run';
+        const tgt = fromLocal(pl.side * 1200, 0, -G.speed * 6 + pl.aimLZ * 3);
+        desired = altDesired(tgt.clone().sub(p), p, 36, 180, -0.45, 0.3);
+        if (Math.hypot(tgt.x - p.x, tgt.z - p.z) < 420 && p.y < 120) pl.state = 'run';
       } else if (pl.state === 'run') {
-        const I = intercept(p, 48);
-        desired = altDesired(I.clone().sub(p), p, 32, 150);
-        rate = 0.6;
-        if ((hd < 820 && hd > 300) || pl.t > 40) {
-          const aim = intercept(p, 48);
-          aim.addScaledVector(fwdV(), rand(-70, 70));
+        desired = altDesired(intercept(p, 48).sub(p), p, 30, 150); rate = 0.6;
+        if ((hd < 800 && hd > 300) || pl.t > 35) {
+          const aim = intercept(p, 48).addScaledVector(fwdV(), rand(-90, 90));
           const dir = aim.sub(p).setY(0).normalize();
           const tm = new THREE.Mesh(rocketGeo, MAT.dark); tm.scale.set(2, 2, 2.6); scene.add(tm);
           torps.push({ pos: V3(p.x, -1.2, p.z), dir, t: 0, run: 0, mesh: tm, wake: 0 });
           if (pl.mesh.userData.payload) pl.mesh.userData.payload.visible = false;
           splash(V3(p.x, 0, p.z), 0.5);
-          const lc = toLocal(p);
-          if (Math.random() < 0.5) msg(`${lc.x < 0 ? '左舷' : '右舷'}に雷跡！`, 'warn');
-          if (G.alertT <= 0) alertMsg(lc.x < 0 ? '左舷 雷跡！' : '右舷 雷跡！');
+          if (G.alertT <= 0) alertMsg(toLocal(p).x < 0 ? '左舷 雷跡！ 転舵せよ' : '右舷 雷跡！');
           pl.state = 'egress'; pl.t = 0;
         }
       }
@@ -832,55 +894,55 @@ function updatePlanes(dt) {
       if (pl.state === 'approach') {
         const lead = tmpV2.copy(G.vel).multiplyScalar(5).add(shipC);
         desired = altDesired(lead.clone().sub(p), p, 1000);
-        if (hd < 520 + Math.random() * 10) { pl.state = 'dive'; pl.t = 0; }
+        if (hd < 520) { pl.state = 'dive'; pl.t = 0; }
       } else if (pl.state === 'dive') {
         pl.speed = Math.min(150, pl.speed + 30 * dt);
         const tt = Math.max(1.5, p.distanceTo(shipC) / 160);
-        const aimP = fromLocal(rand(-3, 3) + pl.side * 2, 0, pl.aimLZ * 0.4);
-        aimP.addScaledVector(G.vel, tt);
+        const aimP = fromLocal(pl.side * rand(2, 9), 0, pl.aimLZ * 0.5).addScaledVector(G.vel, tt);
         desired = aimP.sub(p); rate = 1.6;
         if (p.y < 430) {
           const bm = new THREE.Mesh(bombGeo, MAT.black); scene.add(bm);
           bombs.push({ pos: p.clone(), vel: pl.vel.clone().multiplyScalar(0.97), mesh: bm });
           if (pl.mesh.userData.payload) pl.mesh.userData.payload.visible = false;
           pl.state = 'egress'; pl.t = 0;
-          if (G.alertT <= 0) alertMsg('急降下爆撃機！');
         }
       }
-    } else { // fighter
+    } else { // 戦闘機：何度でも掃射に来る
       if (pl.state === 'approach') {
-        const tgt = fromLocal(pl.side * 1500, 0, rand(-200, 200));
-        desired = altDesired(tgt.clone().sub(p), p, 260);
-        if (Math.hypot(tgt.x - p.x, tgt.z - p.z) < 350) { pl.state = 'attack'; pl.t = 0; }
+        const tgt = fromLocal(pl.side * 1300, 0, pl.aimLZ * 4);
+        desired = altDesired(tgt.clone().sub(p), p, 240);
+        if (Math.hypot(tgt.x - p.x, tgt.z - p.z) < 380) { pl.state = 'attack'; pl.t = 0; }
       } else if (pl.state === 'attack') {
-        const hw = Math.max(yHalfW(pl.aimLZ), 6);
-        const aimP = fromLocal(pl.side * hw, 7, pl.aimLZ);
-        desired = aimP.clone().sub(p); rate = 1.2;
-        pl.rcool -= dt;
+        const aimP = pl.bridge ? ship.localToWorld(V3(rand(-4, 4), Y_FB + 30, -22)) : fromLocal(pl.side * Math.max(yHalfW(pl.aimLZ), 6), 6, pl.aimLZ);
+        desired = aimP.clone().sub(p); rate = 1.25;
         const dist = p.distanceTo(aimP);
-        if (dist < 900 && pl.rockets > 0 && pl.rcool <= 0) {
-          pl.rockets--; pl.rcool = 0.16;
-          const tt = dist / 300, lead = aimP.clone().addScaledVector(G.vel, tt);
+        pl.mgCool -= dt; pl.rcool -= dt;
+        if (dist < 1150 && pl.mgCool <= 0) { pl.mgCool = 0.06; enemyMG(pl, aimP); G.mgActive = Math.min(1, 1.6 - dist / 1150); }
+        if (dist < 800 && pl.rockets > 0 && pl.rcool <= 0) {
+          pl.rockets--; pl.rcool = 0.18;
+          const lead = aimP.clone().addScaledVector(G.vel, dist / 300);
           const v = lead.sub(p).normalize().multiplyScalar(300);
           const rm = new THREE.Mesh(rocketGeo, MAT.dark); scene.add(rm);
           eRockets.push({ pos: p.clone().add(V3(rand(-3, 3), -1, 0)), vel: v, t: 0, mesh: rm });
         }
-        if (dist < 260 || (pl.rockets <= 0 && dist < 500) || pl.t > 30) { pl.state = 'egress'; pl.t = 0; pl.passes++; }
+        if (dist < 200 || pl.t > 25) { pl.state = 'egress'; pl.t = 0; }
       }
     }
     if (pl.state === 'egress') {
       const away = tmpV2.copy(p).sub(shipC).setY(0);
       if (away.lengthSq() < 1) away.set(1, 0, 0);
       desired = away.normalize().add(fwdV().clone().multiplyScalar(0.2));
-      desired.y = p.y < 300 ? 0.45 : 0.08; rate = 1.0;
-      pl.speed = lerp(pl.speed, 120, dt);
-      if (pl.type === 'fighter' && pl.passes < 2 && pl.rockets > 0 && hd > 1800) { pl.state = 'approach'; }
-      if (pl.type === 'fighter' && pl.passes < 2 && hd > 2200) { pl.state = 'approach'; pl.rockets = 2; pl.aimLZ = rand(-90, 70); }
-      if (hd > 4800) { scene.remove(pl.mesh); planes.splice(i, 1); continue; }
+      desired.y = p.y < 300 ? 0.45 : 0.06; rate = 1.0;
+      pl.speed = lerp(pl.speed, pl.type === 'fighter' ? 135 : 120, dt);
+      if (pl.type === 'fighter' && hd > 1700 && pl.life < 90) {
+        pl.state = 'approach'; pl.rockets = 2; pl.aimLZ = rand(-95, 75); pl.bridge = Math.random() < 0.35;
+        pl.side = Math.random() < 0.85 ? -1 : 1;
+      }
+      if (hd > 4500) { scene.remove(pl.mesh); planes.splice(i, 1); continue; }
     }
     if (desired) steer(pl, desired, rate, dt);
     p.addScaledVector(pl.vel, dt);
-    if (p.y < 6 && pl.state !== 'falling') { p.y = 6; pl.vel.y = Math.max(0, pl.vel.y); }
+    if (p.y < 8) { p.y = 8; pl.vel.y = Math.max(0, pl.vel.y); }
     pl.mesh.position.copy(p);
     pl.mesh.lookAt(tmpV2.copy(p).add(pl.vel));
     pl.mesh.rotateZ(-pl.bank);
@@ -888,44 +950,39 @@ function updatePlanes(dt) {
 }
 
 // ============================================================
-//  魚雷・爆弾・ロケット
+//  被害：傾斜だけで判定（左舷に受けるほど左へ傾く）
 // ============================================================
+function addList(local, amount) {
+  const port = local.x < 0;
+  G.listT += port ? amount : -amount * 0.45;
+  G.listT = clamp(G.listT, -8, 45);
+}
 function hitShip(local, kind) {
-  const portSide = local.x < 0;
-  const hp = fromLocal(local.x, local.y, local.z);
+  const port = local.x < 0, hp = fromLocal(local.x, local.y, local.z);
   if (kind === 'torp') {
-    G.torpHits++;
-    if (portSide) G.port += 11; else G.star += 11;
-    splash(fromLocal(local.x, 0, local.z), 2.6);
-    explosion(hp, 1.5);
-    G.shake = 1.2; G.hull -= 3;
-    AU.boom(0, 1.6);
-    msg(`${portSide ? '左舷' : '右舷'}に魚雷命中！ 浸水拡大`, 'warn');
-    alertMsg(`${portSide ? '左舷' : '右舷'} 魚雷命中！`);
+    G.torpHits++; addList(local, 2.7);
+    splash(fromLocal(local.x, 0, local.z), 2.6); explosion(hp, 1.5);
+    G.shake = 1.3; AU.boom(0, 1.6);
+    alertMsg(port ? '左舷 魚雷命中！ 傾斜増大' : '右舷 魚雷命中！');
     emitters.push({ lx: local.x * 0.9, ly: 3, lz: local.z, t: 40, fire: false });
   } else if (kind === 'bomb') {
-    G.bombHits++; G.hull -= 8; if (portSide) G.aa = Math.max(0.35, G.aa - 0.06);
-    if (Math.random() < 0.35) { if (portSide) G.port += 2; else G.star += 2; }
-    explosion(hp, 2);
-    G.shake = 1.0; AU.boom(0, 1.2);
-    msg('爆弾命中！ 火災発生', 'warn');
-    emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 60, fire: true });
+    G.bombHits++; addList(local, 1.2);
+    explosion(hp, 2); G.shake = 1.0; AU.boom(0, 1.2);
+    emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 50, fire: true });
   } else {
-    G.hull -= 2.5; if (portSide) G.aa = Math.max(0.35, G.aa - 0.02);
-    if (local.y < 4) { if (portSide) G.port += 1.5; else G.star += 1.5; }
-    explosion(hp, 0.8); G.shake = Math.max(G.shake, 0.4); AU.boom(0, 0.5);
-    if (Math.random() < 0.3) emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 25, fire: true });
+    addList(local, 0.3);
+    explosion(hp, 0.8); G.shake = Math.max(G.shake, 0.4); AU.boom(0, 0.4);
+    if (Math.random() < 0.25) emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 20, fire: true });
   }
-  if (emitters.length > 14) emitters.shift();
+  if (emitters.length > 16) emitters.shift();
 }
 function updateOrdnance(dt) {
-  // 魚雷
   for (let i = torps.length - 1; i >= 0; i--) {
     const o = torps[i]; o.t += dt;
     const step = 48 * dt; o.pos.addScaledVector(o.dir, step); o.run += step;
     o.mesh.position.copy(o.pos); o.mesh.lookAt(tmpV2.copy(o.pos).add(o.dir));
     o.wake -= dt;
-    if (o.wake <= 0) { o.wake = 0.035; PN.spawn(o.pos.x + rand(-1, 1), 0.9, o.pos.z + rand(-1, 1), rand(-0.4, 0.4), 0, rand(-0.4, 0.4), 9, 2.5, 9, 0.95, 0.97, 1, 0.75); }
+    if (o.wake <= 0) { o.wake = 0.035; PN.spawn(o.pos.x + rand(-1, 1), 0.9, o.pos.z + rand(-1, 1), rand(-0.4, 0.4), 0, rand(-0.4, 0.4), 9, 2.5, 9, 0.95, 0.97, 1, 0.8); }
     const lc = toLocal(o.pos), hw = yHalfW(lc.z);
     if (o.run > 90 && hw > 0 && Math.abs(lc.x) < hw + 1) {
       hitShip({ x: Math.sign(lc.x) * hw, y: 2, z: lc.z }, 'torp');
@@ -933,7 +990,6 @@ function updateOrdnance(dt) {
     }
     if (o.t > 30) { scene.remove(o.mesh); torps.splice(i, 1); }
   }
-  // 爆弾
   for (let i = bombs.length - 1; i >= 0; i--) {
     const o = bombs[i];
     o.vel.y -= 9.8 * dt; o.pos.addScaledVector(o.vel, dt);
@@ -944,110 +1000,118 @@ function updateOrdnance(dt) {
     }
     if (o.pos.y <= 0) {
       splash(o.pos, 2.2); AU.boom(o.pos.distanceTo(G.pos), 0.8);
-      if (hw > 0 && Math.abs(lc.x) < hw + 28) { // 至近弾
-        if (lc.x < 0) G.port += 2.5; else G.star += 1.5;
-        G.shake = Math.max(G.shake, 0.5);
-        msg(`至近弾！ ${lc.x < 0 ? '左舷' : '右舷'}に浸水`, 'warn');
-      }
+      if (hw > 0 && Math.abs(lc.x) < hw + 28) { addList(lc, 0.4); G.shake = Math.max(G.shake, 0.5); }
       scene.remove(o.mesh); bombs.splice(i, 1);
     }
   }
-  // 敵ロケット弾
   for (let i = eRockets.length - 1; i >= 0; i--) {
     const o = eRockets[i]; o.t += dt;
     o.vel.y -= 3 * dt; o.pos.addScaledVector(o.vel, dt);
     o.mesh.position.copy(o.pos); o.mesh.lookAt(tmpV2.copy(o.pos).add(o.vel));
-    PN.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 1, 0, 1.6, 1.5, 6, 0.75, 0.75, 0.75, 0.6);
+    PN.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 1, 0, 1.4, 1.5, 6, 0.75, 0.75, 0.75, 0.6);
     PA.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 0, 0, 0.08, 3, 2, 1, 0.7, 0.3, 1);
     const lc = toLocal(o.pos), hw = yHalfW(lc.z);
-    if (o.pos.y < Y_FB + 14 && o.pos.y > -1 && hw > 0 && Math.abs(lc.x) < hw + 0.5) {
+    if (o.pos.y < Y_FB + 30 && o.pos.y > -1 && hw > 0 && Math.abs(lc.x) < hw + 0.5) {
       hitShip({ x: lc.x, y: o.pos.y, z: lc.z }, 'rocket'); scene.remove(o.mesh); eRockets.splice(i, 1); continue;
     }
     if (o.pos.y < 0 || o.t > 6) { splash(o.pos, 0.6); scene.remove(o.mesh); eRockets.splice(i, 1); }
   }
-  // 味方対空ロケット弾
+  // 機銃弾の着弾（甲板に火花、海面に水しぶき）
+  const cam = camera.getWorldPosition(tmpV2);
+  for (let i = impacts.length - 1; i >= 0; i--) {
+    const im = impacts[i]; if (im.t > T) continue;
+    const p = im.p;
+    if (p.y < 1.5) PN.spawn(p.x, 0.8, p.z, 0, rand(6, 12), 0, 0.8, 1.5, 4, 0.9, 0.95, 1, 0.8, 18);
+    else for (let k = 0; k < 3; k++) PA.spawn(p.x, p.y, p.z, rand(-12, 12), rand(2, 14), rand(-12, 12), 0.3, 1.6, 0.6, 1, 0.8, 0.4, 1, 20);
+    if (p.distanceTo(cam) < 30) { G.shake = Math.max(G.shake, 0.25); if (G.pingT <= 0) { AU.ping(); G.pingT = 0.12; } }
+    impacts.splice(i, 1);
+  }
+  // 味方ミサイル
   for (let i = pRockets.length - 1; i >= 0; i--) {
     const o = pRockets[i]; o.t += dt;
     if (o.target && o.target.state !== 'falling' && planes.includes(o.target)) {
-      const tt = o.pos.distanceTo(o.target.pos) / 460;
+      const tt = o.pos.distanceTo(o.target.pos) / 520;
       const lead = tmpV2.copy(o.target.pos).addScaledVector(o.target.vel, tt).sub(o.pos).normalize();
-      const cur = o.vel.clone().normalize(); const ang = cur.angleTo(lead);
-      if (ang > 1e-4) cur.lerp(lead, Math.min(1, 3.2 * dt / ang)).normalize();
-      o.vel.copy(cur).multiplyScalar(460);
+      const cur = o.vel.clone().normalize(), ang = cur.angleTo(lead);
+      if (ang > 1e-4) cur.lerp(lead, Math.min(1, 4 * dt / ang)).normalize();
+      o.vel.copy(cur).multiplyScalar(520);
     }
     o.pos.addScaledVector(o.vel, dt);
     o.mesh.position.copy(o.pos); o.mesh.lookAt(tmpV2.copy(o.pos).add(o.vel));
-    PN.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 0.5, 0, 1.2, 1.2, 5, 0.85, 0.85, 0.85, 0.55);
+    PN.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 0.5, 0, 1.0, 1.2, 5, 0.85, 0.85, 0.85, 0.5);
     PA.spawn(o.pos.x, o.pos.y, o.pos.z, 0, 0, 0, 0.07, 3.5, 2, 1, 0.75, 0.35, 1);
     let hit = false;
     for (const pl of planes) {
       if (pl.state === 'falling') continue;
-      if (pl.pos.distanceToSquared(o.pos) < 17 * 17) { killPlane(pl, false); hit = true; break; }
+      if (pl.pos.distanceToSquared(o.pos) < 18 * 18) { killPlane(pl, false); hit = true; break; }
     }
-    if (hit || o.t > 4.5 || o.pos.y < 0) {
+    if (hit || o.t > 4 || o.pos.y < 0) {
       if (!hit && o.pos.y > 0) flak(o.pos);
       scene.remove(o.mesh); pRockets.splice(i, 1);
     }
   }
 }
-function fireRocket(dir) {
-  G.side = -G.side;
-  const from = ship.localToWorld(V3(G.side * 12.5, Y_FB + 12, -12));
-  let best = null, bestA = 7.5 * DEG;
+const LAUNCHERS = [[-12.5, Y_FB + 12, -12], [12.5, Y_FB + 12, -12], [-15, Y_FB + 11, 10], [15, Y_FB + 11, 10]];
+function fireMissile(dir) {
+  G.side = (G.side + 1) % 4;
+  const L = LAUNCHERS[G.side], from = ship.localToWorld(V3(L[0], L[1], L[2]));
+  const camP = camera.getWorldPosition(tmpV).clone();
+  let best = null, bestA = 9 * DEG;
   for (const pl of planes) {
     if (pl.state === 'falling') continue;
-    const a = dir.angleTo(tmpV2.copy(pl.pos).sub(camera.getWorldPosition(tmpV)));
-    if (a < bestA && pl.pos.distanceTo(G.pos) < 4500) { bestA = a; best = pl; }
+    const a = dir.angleTo(tmpV2.copy(pl.pos).sub(camP));
+    if (a < bestA && pl.pos.distanceTo(camP) < 4000) { bestA = a; best = pl; }
   }
+  // 照準線上の点へ向けて発射（発射位置と視点のずれを補正）
+  const aimPt = camP.addScaledVector(dir, best ? best.pos.distanceTo(camP) : 1200);
+  const v = aimPt.sub(from).normalize().multiplyScalar(520).add(G.vel);
   const rm = new THREE.Mesh(rocketGeo, MAT.planeLight); scene.add(rm);
-  pRockets.push({ pos: from, vel: dir.clone().multiplyScalar(460).add(G.vel), t: 0, mesh: rm, target: best });
+  pRockets.push({ pos: from, vel: v, t: 0, mesh: rm, target: best });
   PA.spawn(from.x, from.y, from.z, 0, 0, 0, 0.12, 6, 10, 1, 0.8, 0.4, 1);
   AU.rocket();
 }
 
 // ============================================================
-//  波動砲
+//  波動砲（照準の方向へ即発射）
 // ============================================================
-const beamMats = [0.95, 0.35, 0.12].map((o, i) => new THREE.MeshBasicMaterial({
-  color: [0xffffff, 0x8fe8ff, 0x2a7bff][i], transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide
+const beamMats = [0xffffff, 0x8fe8ff, 0x2a7bff].map(c => new THREE.MeshBasicMaterial({
+  color: c, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide
 }));
-const muzzle = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0x9fefff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-muzzle.position.set(0, 9, -133); muzzle.visible = false; ship.add(muzzle);
 const BEAM_LEN = 11000;
-function fireBeam() {
+function fireBeam(aim) {
+  // 艦首から照準線上の目標点へ向けて発射（艦長目線から射線が見えるように）
+  const camP = camera.getWorldPosition(V3());
+  let D = 2500;
+  for (const c of carriers) if (c.alive && aim.angleTo(tmpV.copy(c.pos).setY(15).sub(camP)) < 4 * DEG) D = c.pos.distanceTo(camP);
   const origin = ship.localToWorld(V3(0, 9, -133));
-  const dir = fwdV().clone();
+  const dir = camP.clone().addScaledVector(aim, D).sub(origin).normalize();
   const g = new THREE.Group();
-  [10, 26, 60].forEach((r, i) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.7, BEAM_LEN, 20, 1, true), beamMats[i].clone());
-    g.add(m);
-  });
+  [4, 11, 26].forEach((r, i) => g.add(new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.7, BEAM_LEN, 20, 1, true), beamMats[i].clone())));
   g.position.copy(origin).addScaledVector(dir, BEAM_LEN / 2);
-  g.quaternion.setFromUnitVectors(V3(0, 1, 0), tmpV2.copy(dir).negate());
+  g.quaternion.setFromUnitVectors(V3(0, 1, 0), dir.clone().negate());
   scene.add(g); beams.push({ g, t: 0 });
-  G.flash = 1; G.shake = 2.2;
+  G.flash = 0.45; G.shake = 2.2; G.energy = 0;
   AU.beam();
   for (let i = 0; i < 160; i++) {
-    const d = rand(0, 1500);
-    PA.spawn(origin.x + dir.x * d + rand(-20, 20), origin.y + rand(-20, 20), origin.z + dir.z * d + rand(-20, 20), rand(-30, 30), rand(-10, 30), rand(-30, 30), rand(0.6, 1.6), 10, 30, 0.6, 0.9, 1, 0.9, 0, 1.5);
+    const d = rand(0, 1800);
+    PA.spawn(origin.x + dir.x * d + rand(-20, 20), origin.y + dir.y * d + rand(-20, 20), origin.z + dir.z * d + rand(-20, 20), rand(-30, 30), rand(-10, 30), rand(-30, 30), rand(0.6, 1.6), 10, 30, 0.6, 0.9, 1, 0.9, 0, 1.5);
   }
+  const lateral = p => { const rel = tmpV2.copy(p).sub(origin), along = rel.dot(dir); return [along, Math.sqrt(Math.max(0, rel.lengthSq() - along * along))]; };
+  let n = 0;
+  for (const pl of planes) {
+    if (pl.state === 'falling') continue;
+    const [al, lat] = lateral(pl.pos); if (al > 0 && lat < 110) { killPlane(pl, false); n++; }
+  }
+  if (n) msg(`波動砲 命中！ 敵機 ${n} 機 撃墜`, 'good');
   for (const c of carriers) {
     if (!c.alive) continue;
-    const rel = tmpV2.copy(c.pos).sub(origin), along = rel.dot(dir);
-    const lat = Math.sqrt(Math.max(0, rel.lengthSq() - along * along));
-    if (along > 0 && along < BEAM_LEN && lat < 190) {
+    const [al, lat] = lateral(tmpV.copy(c.pos).setY(15));
+    if (al > 0 && lat < 260) {
       c.alive = false; c.sink = 0.001; G.csunk++;
       explosion(V3(c.pos.x, 30, c.pos.z), 9);
       setTimeout(() => AU.boom(1500, 2), 600);
-      msg(`敵空母「${c.name}」（${c.tg}）撃沈！`, 'good');
-      if (carriers.every(k => !k.alive)) msg('敵機動部隊 壊滅！ 以後の空襲なし', 'good');
+      msg(`敵空母「${c.name}」撃沈！ 敵機の来襲が減る`, 'good');
     }
-  }
-  for (const pl of planes) {
-    if (pl.state === 'falling') continue;
-    const rel = tmpV2.copy(pl.pos).sub(origin), along = rel.dot(dir);
-    const lat = Math.sqrt(Math.max(0, rel.lengthSq() - along * along));
-    if (along > 0 && lat < 70) killPlane(pl, false);
   }
 }
 
@@ -1055,12 +1119,12 @@ function fireBeam() {
 //  史実イベント
 // ============================================================
 const HIST = [
-  { t: 12 * 60 + 20, f: () => msg('12:20 電探、敵大編隊を探知。方位090（左舷）', 'hist') },
+  { t: 12 * 60 + 21, f: () => msg('12:20 電探、敵大編隊を探知。方位090（左舷）', 'hist') },
+  { t: 12 * 60 + 32, f: () => { msg('12:32 敵機来襲！ 対空戦闘！', 'warn'); alertMsg('対空戦闘 用意！'); AU.alarm(); } },
   { t: 12 * 60 + 48, f: () => sinkEscort('浜風', '12:48 駆逐艦「浜風」被雷 轟沈') },
-  { t: 13 * 60 + 40, f: () => msg('13:40頃 史実：大和、左舷傾斜。右舷外側機械室・缶室へ注水し傾斜を復元', 'hist') },
   { t: 14 * 60 + 5, f: () => sinkEscort('矢矧', '14:05 軽巡洋艦「矢矧」沈没') },
-  { t: 14 * 60 + 23, f: () => { msg('14:23 史実では、この時刻に大和は横転・沈没した——', 'hist'); setTimeout(() => G && msg('だが本艦は健在なり。進め、沖縄へ！', 'good'), 2500); } },
-  { t: 18 * 60 + 50, f: () => msg('18:50 日没', 'hist') },
+  { t: 14 * 60 + 23, f: () => { msg('14:23 史実では、この時刻に大和は横転・沈没した——', 'hist'); setTimeout(() => state === 'play' && msg('だが本艦は健在なり。進め、沖縄へ！', 'good'), 2500); } },
+  { t: 17 * 60 + 50, f: () => msg('日没迫る。沖縄まであとわずか', 'hist') },
 ];
 function sinkEscort(name, text) {
   const e = escorts.find(x => x.name === name);
@@ -1068,217 +1132,180 @@ function sinkEscort(name, text) {
 }
 
 // ============================================================
-//  入力
+//  入力（クリックでポインタロック → マウスで自由に照準）
 // ============================================================
+const cv = renderer.domElement;
+const locked = () => document.pointerLockElement === cv;
+function setMouse(x, y) { mouse.sx = x; mouse.sy = y; mouse.x = x / innerWidth * 2 - 1; mouse.y = -(y / innerHeight) * 2 + 1; }
 addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (!G || state !== 'play') return;
-  if (e.code === 'KeyW' || e.code === 'ArrowUp') setSpeed(1);
-  if (e.code === 'KeyS' || e.code === 'ArrowDown') setSpeed(-1);
-  if (e.code === 'KeyF') counterFlood();
-  if (e.code === 'KeyR') G.yaw = 0;
-  if (e.code === 'Space') e.preventDefault();
+  if (e.code === 'KeyM') { BGM.setOn(!BGM.on); if (G && state === 'play') msg(BGM.on ? 'BGM オン' : 'BGM オフ'); }
+  if (state !== 'play') return;
+  if (e.code === 'Space') { e.preventDefault(); tryBeam(); }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
-const cv = renderer.domElement;
-function setMouse(x, y) { mouse.sx = x; mouse.sy = y; mouse.x = x / innerWidth * 2 - 1; mouse.y = -(y / innerHeight) * 2 + 1; }
-addEventListener('mousemove', e => setMouse(e.clientX, e.clientY));
-cv.addEventListener('mousedown', e => { if (e.button === 0) mouse.down = true; AU.init(); });
-addEventListener('mouseup', () => mouse.down = false);
+addEventListener('mousemove', e => {
+  if (locked() && state === 'play') {
+    G.yaw = clamp(G.yaw - e.movementX * 0.0022, -175 * DEG, 175 * DEG);
+    G.pitch = clamp(G.pitch - e.movementY * 0.0022, -0.5, 1.35);
+  } else setMouse(e.clientX, e.clientY);
+});
+cv.addEventListener('mousedown', e => {
+  AU.init();
+  if (state !== 'play') return;
+  if (!locked() && cv.requestPointerLock && !document.body.classList.contains('touch')) cv.requestPointerLock();
+  if (e.button === 0) mouse.down = true;
+  if (e.button === 2) tryBeam();
+});
+addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
 addEventListener('contextmenu', e => e.preventDefault());
-cv.addEventListener('touchstart', e => { const t = e.touches[0]; setMouse(t.clientX, t.clientY); AU.init(); e.preventDefault(); }, { passive: false });
-cv.addEventListener('touchmove', e => { const t = e.touches[0]; setMouse(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+// タッチ：ドラッグで見回し
+let lastTouch = null;
+cv.addEventListener('touchstart', e => { const t = e.touches[0]; lastTouch = [t.clientX, t.clientY]; AU.init(); e.preventDefault(); }, { passive: false });
+cv.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  if (lastTouch && G && state === 'play') {
+    G.yaw = clamp(G.yaw - (t.clientX - lastTouch[0]) * 0.005, -175 * DEG, 175 * DEG);
+    G.pitch = clamp(G.pitch - (t.clientY - lastTouch[1]) * 0.005, -0.5, 1.35);
+  }
+  lastTouch = [t.clientX, t.clientY]; e.preventDefault();
+}, { passive: false });
 if (matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('#touch button').forEach(b => {
   const k = b.dataset.k;
-  const on = e => { e.preventDefault(); touchHold[k] = true; AU.init();
-    if (k === 'cf') counterFlood(); if (k === 'spdUp') setSpeed(1); if (k === 'spdDn') setSpeed(-1); };
+  const on = e => { e.preventDefault(); touchHold[k] = true; AU.init(); if (k === 'beam') tryBeam(); };
   const off = e => { e.preventDefault(); touchHold[k] = false; };
   b.addEventListener('touchstart', on, { passive: false }); b.addEventListener('touchend', off, { passive: false });
   b.addEventListener('mousedown', on); b.addEventListener('mouseup', off); b.addEventListener('mouseleave', off);
 });
-function setSpeed(d) {
-  G.speedIdx = clamp(G.speedIdx + d, 0, SPEEDS.length - 1);
-  msg(`機関 ${SPEEDS[G.speedIdx][1]}（${SPEEDS[G.speedIdx][0]}ノット）`);
+const raycaster = new THREE.Raycaster();
+function aimDir() {
+  const centered = locked() || document.body.classList.contains('touch');
+  raycaster.setFromCamera(centered ? { x: 0, y: 0 } : mouse, camera);
+  return raycaster.ray.direction.clone();
 }
-function counterFlood() {
-  if (G.cfCool > 0) { msg('注排水 準備中…'); return; }
-  if (G.port - G.star < 3) { msg('傾斜わずか。注水の必要なし'); return; }
-  G.star += 11; G.cfCount++; G.cfCool = 6;
-  msg('右舷へ注水！ 傾斜復元中（予備浮力・速力 低下）', 'good');
-  AU.noise(2.5, 400, 100, 0.25);
+function tryBeam() {
+  if (!G || state !== 'play') return;
+  if (G.energy >= 100) fireBeam(aimDir());
+  else msg(`波動砲 充填中（${G.energy.toFixed(0)}%）`);
 }
 
 // ============================================================
 //  プレイ更新
 // ============================================================
-let state = 'title';
-function maxSpeed() { return clamp(27 - (G.port + G.star) * 0.06 - G.cfCount * 0.9 - (100 - G.hull) * 0.04, 8, 27); }
-
+let aaTimer = 0;
 function updatePlay(dt) {
-  const gdt = dt; // 戦闘は実時間、航程と時計は圧縮
-  // 時刻・航程
-  if (G.waveEnded && planes.length === 0 && torps.length === 0 && bombs.length === 0) G.timeMul = lerp(G.timeMul, 6, dt * 0.5);
-  const minPerSec = 1.27 * G.timeMul;
-  G.clock += minPerSec * dt;
-  const dev = G.heading;
-  G.dist = clamp(G.dist - G.speed * Math.cos(dev) * minPerSec / 60 * dt, 0, TOTAL_NM + 30);
+  G.elapsed += dt;
+  G.clock = 12 * 60 + 20 + G.elapsed * MIN_PER_SEC;
+  G.dist = TOTAL_NM * (1 - progress());
   for (const h of HIST) if (!G.histDone[h.t] && G.clock >= h.t) { G.histDone[h.t] = 1; h.f(); }
-  if (!G.waveEnded && G.clock >= 18 * 60 + 30) { G.waveEnded = true; msg('日没迫る。米軍機、空母へ帰投。夜陰に乗じ沖縄へ突入せよ', 'good'); }
-  if (!G.waveEnded && carriers.every(c => !c.alive) && G.spawnQ.length === 0) G.waveEnded = true;
-  // 昼夜
-  const day = clamp(1 - (G.clock - (18 * 60)) / 90, 0.3, 1);
-  setDaylight(day);
+  setDaylight(clamp(1 - (G.clock - (17 * 60 + 30)) / 100, 0.55, 1));
 
   // 操艦（旋回は素早く）
   let rud = 0;
   if (keys.KeyA || keys.ArrowLeft || touchHold.left) rud += 1;
   if (keys.KeyD || keys.ArrowRight || touchHold.right) rud -= 1;
-  const maxTurn = 7.5 * DEG * (0.45 + 0.55 * G.speed / 27);
-  G.turnRate = lerp(G.turnRate, rud * maxTurn, Math.min(1, dt * 1.6));
+  G.turnRate = lerp(G.turnRate, rud * 7 * DEG, Math.min(1, dt * 1.8));
   G.heading = angWrap(G.heading + G.turnRate * dt);
-  const target = Math.min(SPEEDS[G.speedIdx][0], maxSpeed());
-  G.speed = lerp(G.speed, target, dt * 0.25);
   const f = fwdV();
   G.vel.set(f.x, 0, f.z).multiplyScalar(G.speed * 0.5144 * 1.6);
   G.pos.addScaledVector(G.vel, dt);
 
-  // 浸水・傾斜
-  G.port = Math.max(0, G.port - 0.14 * dt); G.star = Math.max(0, G.star - 0.14 * dt);
-  G.cfCool = Math.max(0, G.cfCool - dt);
-  const listT = (G.port - G.star) * 0.4;
-  G.list = lerp(G.list, listT, Math.min(1, dt * 0.35));
+  // 傾斜（応急修理でゆっくり戻る）
+  G.listT += (G.listT > 0 ? -0.5 : 0.3) * dt;
+  G.list = lerp(G.list, G.listT, Math.min(1, dt * 0.6));
+  G.maxList = Math.max(G.maxList, G.list);
   if (G.list >= MAX_LIST) return endGame('capsize');
-  if (G.port + G.star >= MAX_FLOOD) return endGame('flood');
-  if (G.hull <= 0) return endGame('explode');
-  if (G.dist <= 0) return endGame('win');
+  if (G.elapsed >= DURATION) return endGame('win');
 
-  // 攻撃隊
-  if (!G.waveEnded && T - G.startT >= G.nextWaveT) {
-    spawnWave(); G.nextWaveT = T - G.startT + 55;
+  // 敵機の来襲（途切れなく、時間とともに激化）
+  if (G.clock >= 12 * 60 + 30) {
+    G.spawnT -= dt;
+    if (G.spawnT <= 0 && planes.length < maxPlanes()) {
+      spawnGroup();
+      G.spawnT = lerp(2.0, 0.6, progress()) / diff / (1 - 0.08 * G.csunk);
+    }
   }
-  if (!G.waveEnded && planes.length === 0 && G.spawnQ.length === 0 && G.wave > 0) G.nextWaveT = Math.min(G.nextWaveT, T - G.startT + 7);
-  while (G.spawnQ.length && G.spawnQ[0].t <= T) spawnPlane(G.spawnQ.shift().type);
-
+  G.mgActive = 0;
   updatePlanes(dt);
   updateOrdnance(dt);
 
-  // 自動対空砲火（演出・低確率撃墜）
+  // 自動対空砲火（演出）
   aaTimer -= dt;
-  if (aaTimer <= 0 && planes.length) {
-    aaTimer = 0.06;
-    const pl = planes[Math.floor(Math.random() * planes.length)];
+  const alive = planes.filter(p => p.state !== 'falling');
+  while (aaTimer <= 0 && alive.length) {
+    aaTimer += 0.035;
+    const pl = alive[Math.floor(Math.random() * alive.length)];
     const d = pl.pos.distanceTo(G.pos);
-    if (pl.state !== 'falling' && d < 2800) {
-      flak(V3(pl.pos.x + rand(-60, 60), pl.pos.y + rand(-40, 40), pl.pos.z + rand(-60, 60)));
-      const src = Math.random() < 0.6 ? ship.localToWorld(V3(rand(-14, 14), Y_FB + 11, rand(-30, 25)))
-        : (() => { const e = escorts.filter(x => x.alive)[Math.floor(Math.random() * escorts.filter(x => x.alive).length)]; return e ? e.mesh.position.clone().setY(10) : V3(G.pos.x, 20, G.pos.z); })();
-      const v = pl.pos.clone().add(V3(rand(-40, 40), rand(-30, 30), rand(-40, 40))).sub(src).normalize().multiplyScalar(700);
-      PA.spawn(src.x, src.y, src.z, v.x, v.y, v.z, Math.min(3, d / 700), 2.2, 2.2, 1, 0.55, 0.2, 1);
-    }
+    if (d > 2800) continue;
+    if (Math.random() < 0.4) flak(V3(pl.pos.x + rand(-70, 70), pl.pos.y + rand(-40, 40), pl.pos.z + rand(-70, 70)));
+    const src = ship.localToWorld(V3(rand(-14, 14), Y_FB + 11, rand(-30, 25)));
+    const v = pl.pos.clone().add(V3(rand(-50, 50), rand(-30, 30), rand(-50, 50))).sub(src).normalize().multiplyScalar(700);
+    PA.spawn(src.x, src.y, src.z, v.x, v.y, v.z, Math.min(3, d / 700), 2.2, 2.2, 1, 0.75, 0.3, 1);
   }
-  for (const pl of planes) {
-    if (pl.state === 'falling') continue;
-    const d = pl.pos.distanceTo(G.pos);
-    if (d < 1800 && Math.random() < 0.012 * G.aa * dt / diff) killPlane(pl, true);
-  }
+  for (const pl of alive) if (pl.pos.distanceTo(G.pos) < 1600 && Math.random() < 0.01 * dt) killPlane(pl, true);
 
-  // 射撃
+  // ミサイル連射
   G.fireCool -= dt;
-  const firing = mouse.down || touchHold.fire;
-  if (firing && G.fireCool <= 0 && G.ammo >= 1) {
-    G.fireCool = 0.12; G.ammo--; G.idle = 0;
-    raycaster.setFromCamera(touchHold.fire && !mouse.down ? { x: 0, y: 0.1 } : mouse, camera);
-    fireRocket(raycaster.ray.direction);
-  } else if (!firing) { G.idle += dt; if (G.idle > 0.6) G.ammo = Math.min(40, G.ammo + 7 * dt); }
+  if ((mouse.down || touchHold.fire) && G.fireCool <= 0) { G.fireCool = 0.075; fireMissile(aimDir()); }
+  G.energy = Math.min(100, G.energy + dt * 100 / 22);
 
-  // 波動砲
-  G.energy = Math.min(100, G.energy + dt * 100 / 20);
-  const beamKey = keys.Space || touchHold.beam;
-  if (beamKey && G.energy >= 100 && !G.charging) { G.charging = true; G.charge = 0; AU.charge(); }
-  if (G.charging) {
-    G.charge += dt / 2;
-    muzzle.visible = true; const s = 1 + G.charge * 7 + Math.sin(T * 40) * 0.6; muzzle.scale.set(s, s, s);
-    const mp = ship.localToWorld(V3(0, 9, -133));
-    for (let i = 0; i < 6; i++) {
-      const o = V3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize().multiplyScalar(rand(25, 45));
-      PA.spawn(mp.x + o.x, mp.y + o.y, mp.z + o.z, -o.x * 1.6, -o.y * 1.6, -o.z * 1.6, 0.55, 3, 0.5, 0.5, 0.9, 1, 1);
-    }
-    if (!beamKey) {
-      if (G.charge >= 1) { fireBeam(); G.energy = 0; }
-      else msg('波動砲 発射中止');
-      G.charging = false; muzzle.visible = false;
-    }
-  }
-
-  // 艦の姿勢
   updateShipTransform(dt);
   updateEscorts(dt);
   updateCarriers(dt);
   updateIsland();
   shipEffects(dt);
 
-  // 見張り方向（Q/E・画面端）
-  let yawIn = 0;
-  if (keys.KeyQ || touchHold.lookL) yawIn += 1;
-  if (keys.KeyE || touchHold.lookR) yawIn -= 1;
-  if (!document.body.classList.contains('touch')) {
-    if (mouse.x < -0.9) yawIn += 0.8; if (mouse.x > 0.9) yawIn -= 0.8;
+  // 視点（ロックしていない時は画面端で見回し）
+  if (!locked() && !document.body.classList.contains('touch')) {
+    if (Math.abs(mouse.x) > 0.85) G.yaw = clamp(G.yaw - Math.sign(mouse.x) * (Math.abs(mouse.x) - 0.85) * 10 * dt, -175 * DEG, 175 * DEG);
+    if (Math.abs(mouse.y) > 0.85) G.pitch = clamp(G.pitch + Math.sign(mouse.y) * (Math.abs(mouse.y) - 0.85) * 6 * dt, -0.5, 1.35);
   }
-  G.yaw = clamp(G.yaw + yawIn * 1.5 * dt, -170 * DEG, 170 * DEG);
   head.rotation.y = G.yaw;
   camera.rotation.set(G.pitch + (Math.random() - 0.5) * G.shake * 0.02, (Math.random() - 0.5) * G.shake * 0.02, 0);
   G.shake = Math.max(0, G.shake - dt * 1.6);
   G.flash = Math.max(0, G.flash - dt * 0.9);
   G.alertT -= dt; if (G.alertT <= 0) $('alert').style.opacity = 0;
+  G.pingT -= dt;
 
-  // 敵機の爆音
   if (AU.ctx) {
-    let nd = 1e9; for (const pl of planes) nd = Math.min(nd, pl.pos.distanceTo(G.pos));
-    AU.droneGain.gain.value = lerp(AU.droneGain.gain.value, clamp(1 - nd / 2500, 0, 1) * 0.07, dt * 2);
+    let nd = 1e9; for (const pl of alive) nd = Math.min(nd, pl.pos.distanceTo(G.pos));
+    AU.droneGain.gain.value = lerp(AU.droneGain.gain.value, clamp(1 - nd / 2500, 0, 1) * 0.06, dt * 2);
+    G.mgSnd -= dt;
+    if (G.mgActive > 0 && G.mgSnd <= 0) { G.mgSnd = 0.07; AU.mg(G.mgActive); }
   }
   updateHUD();
 }
-let aaTimer = 0;
-const raycaster = new THREE.Raycaster();
 
-function updateShipTransform(dt, extraRoll = 0) {
-  const t = T;
-  const bob = (waveH(G.pos.x, G.pos.z, t) * 0.4);
-  const pitch = (waveH(G.pos.x + 100 * Math.sin(-G.heading), G.pos.z - 100 * Math.cos(G.heading), t) - waveH(G.pos.x, G.pos.z, t)) * 0.004;
-  const heel = -G.turnRate / DEG * 0.35;
+function updateShipTransform(dt) {
+  const t = T, bob = waveH(G.pos.x, G.pos.z, t) * 0.4;
+  const pitch = (waveH(G.pos.x - 100 * Math.sin(G.heading), G.pos.z - 100 * Math.cos(G.heading), t) - waveH(G.pos.x, G.pos.z, t)) * 0.004;
   ship.position.set(G.pos.x, bob, G.pos.z);
-  ship.rotation.y = G.heading;
-  ship.rotation.x = pitch;
-  ship.rotation.z = (G.list + heel + Math.sin(t * 0.7) * 0.6) * DEG + extraRoll;
+  ship.rotation.y = G.heading; ship.rotation.x = pitch;
+  ship.rotation.z = (G.list - G.turnRate / DEG * 0.35 + Math.sin(t * 0.7) * 0.6) * DEG;
 }
+function fromLocalAny(e, lx, ly, lz) { const c = Math.cos(e.hd), s = Math.sin(e.hd); return V3(e.mesh.position.x + lx * c + lz * s, ly, e.mesh.position.z - lx * s + lz * c); }
 function updateEscorts(dt) {
   for (const e of escorts) {
     if (!e.mesh.visible) continue;
     if (e.sinking > 0) {
-      e.sinking += dt;
-      e.mesh.rotation.z += dt * 0.05; e.mesh.position.y -= dt * 0.35;
+      e.sinking += dt; e.mesh.rotation.z += dt * 0.05; e.mesh.position.y -= dt * 0.35;
       if (Math.random() < 0.5) { const p = e.mesh.position; PN.spawn(p.x + rand(-20, 20), 8, p.z + rand(-20, 20), 0, 6, 0, 6, 15, 50, 0.1, 0.1, 0.1, 0.7, -0.5, 0.4); }
       if (e.sinking > 40) e.mesh.visible = false;
       continue;
     }
-    const tgt = fromLocal(e.ox, 0, e.oz);
-    e.pos.lerp(tgt, Math.min(1, dt * 0.35));
-    e.hd = e.hd + angWrap(G.heading - e.hd) * Math.min(1, dt * 0.5);
+    e.pos.lerp(fromLocal(e.ox, 0, e.oz), Math.min(1, dt * 0.35));
+    e.hd += angWrap(G.heading - e.hd) * Math.min(1, dt * 0.5);
     e.mesh.position.set(e.pos.x, waveH(e.pos.x, e.pos.z, T) * 0.6, e.pos.z);
     e.mesh.rotation.y = e.hd; e.mesh.rotation.z = Math.sin(T * 0.9 + e.ang) * 1.5 * DEG;
-    if (Math.random() < 0.4) { const p = fromLocalAny(e, 0, 14, e.L ? -2 : 0); PN.spawn(p.x, p.y, p.z, rand(-1, 1), 5, rand(-1, 1), 5, 4, 22, 0.2, 0.2, 0.2, 0.45, -0.3, 0.3); }
+    if (Math.random() < 0.4) { const p = fromLocalAny(e, 0, 14, -2); PN.spawn(p.x, p.y, p.z, rand(-1, 1), 5, rand(-1, 1), 5, 4, 22, 0.2, 0.2, 0.2, 0.45, -0.3, 0.3); }
     if (Math.random() < 0.5) { const p = fromLocalAny(e, rand(-5, 5), 0.9, (e.L || 118) / 2); PN.spawn(p.x, p.y, p.z, 0, 0, 0, 7, 4, 16, 0.95, 0.97, 1, 0.5); }
   }
 }
-function fromLocalAny(e, lx, ly, lz) { const c = Math.cos(e.hd), s = Math.sin(e.hd); return V3(e.mesh.position.x + lx * c + lz * s, ly, e.mesh.position.z - lx * s + lz * c); }
-
 function updateCarriers(dt) {
   for (const c of carriers) {
     if (!c.mesh.visible) continue;
-    const b = c.b + Math.sin(T * 0.03 + c.phase) * 3 * DEG;
-    const d = c.d + Math.sin(T * 0.05 + c.phase) * 300;
-    routePos(b, d, c.pos);
+    routePos(c.b + Math.sin(T * 0.03 + c.phase) * 3 * DEG, c.d + Math.sin(T * 0.05 + c.phase) * 300, c.pos);
     c.mesh.position.set(c.pos.x, c.mesh.position.y, c.pos.z);
     c.mesh.rotation.y = Math.PI * 0.55 + c.phase;
     if (c.sink > 0) {
@@ -1287,16 +1314,13 @@ function updateCarriers(dt) {
       if (Math.random() < 0.8) PN.spawn(c.pos.x + rand(-80, 80), 20, c.pos.z + rand(-80, 80), 0, 12, 0, 10, 50, 180, 0.08, 0.08, 0.08, 0.8, -0.5, 0.2);
       if (Math.random() < 0.5) PA.spawn(c.pos.x + rand(-60, 60), 15, c.pos.z + rand(-60, 60), 0, 8, 0, 1.5, 30, 60, 1, 0.5, 0.1, 0.8);
       if (c.sink > 35) c.mesh.visible = false;
-    } else {
-      c.mesh.position.y = waveH(c.pos.x, c.pos.z, T) * 0.3;
-    }
+    } else c.mesh.position.y = waveH(c.pos.x, c.pos.z, T) * 0.3;
   }
 }
 function updateIsland() {
   if (G.dist < 14 && !island) {
     island = new THREE.Group();
-    const geo = new THREE.PlaneGeometry(16000, 5000, 80, 30).rotateX(-Math.PI / 2);
-    const p = geo.attributes.position;
+    const geo = new THREE.PlaneGeometry(16000, 5000, 80, 30).rotateX(-Math.PI / 2), p = geo.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), z = p.getZ(i);
       const edge = Math.max(0, 1 - Math.pow(Math.abs(z) / 2500, 2)) * Math.max(0, 1 - Math.pow(Math.abs(x) / 8000, 4));
@@ -1307,10 +1331,9 @@ function updateIsland() {
     scene.add(island);
     msg('前方に島影！ 沖縄本島を視認', 'good');
   }
-  if (island) routePos(0, 1400 + G.dist / 14 * 7000 + 2500, island.position);
+  if (island) { const b = -G.heading; routePos(b, 1400 + G.dist / 14 * 7000 + 2500, island.position); island.rotation.y = G.heading; }
 }
 function shipEffects(dt) {
-  // 艦首波・航跡
   for (let i = 0; i < 3; i++) {
     const s = Math.random() < 0.5 ? -1 : 1;
     const p = ship.localToWorld(V3(s * rand(6, 14), 0, 128 + rand(0, 6))); p.y = 0.9;
@@ -1321,10 +1344,8 @@ function shipEffects(dt) {
     const o = fromLocal(s * 6, 0, 0).sub(G.pos);
     PN.spawn(p.x, p.y, p.z, o.x, 0, o.z, 6, 4, 16, 0.95, 0.97, 1, 0.6);
   }
-  // 煙突の煤煙
   const fp = ship.localToWorld(V3(0, Y_FB + 34, 9));
   PN.spawn(fp.x + rand(-2, 2), fp.y, fp.z + rand(-2, 2), rand(-1, 1), 7, rand(-1, 1) + 2, 6, 7, 38, 0.24, 0.24, 0.25, 0.5, -0.4, 0.3);
-  // 損傷箇所の火災・煙
   for (let i = emitters.length - 1; i >= 0; i--) {
     const e = emitters[i]; e.t -= dt; if (e.t <= 0) { emitters.splice(i, 1); continue; }
     const p = ship.localToWorld(V3(e.lx, e.ly, e.lz));
@@ -1332,7 +1353,6 @@ function shipEffects(dt) {
     if (e.fire && Math.random() < 0.6) PA.spawn(p.x + rand(-1, 1), p.y, p.z + rand(-1, 1), 0, rand(3, 6), 0, 0.6, 4, 7, 1, 0.5, 0.12, 0.8);
   }
 }
-
 function setDaylight(day) {
   fogColor.copy(FOG_NIGHT).lerp(FOG_DAY, day);
   skyMat.uniforms.uTop.value.setHex(0x0b1018).lerp(new THREE.Color(0x5a636b), day);
@@ -1344,7 +1364,7 @@ function setDaylight(day) {
 // ============================================================
 //  HUD
 // ============================================================
-const cmp = $('compass').getContext('2d'), inc = $('incl').getContext('2d'), rdr = $('radar').getContext('2d');
+const inc = $('incl').getContext('2d'), rdr = $('radar').getContext('2d');
 const ov = $('overlay'), ovc = ov.getContext('2d');
 function resizeOverlay() { ov.width = innerWidth * devicePixelRatio; ov.height = innerHeight * devicePixelRatio; ov.style.width = innerWidth + 'px'; ov.style.height = innerHeight + 'px'; }
 resizeOverlay();
@@ -1352,83 +1372,54 @@ let hudTick = 0;
 function updateHUD() {
   const c = fmtClock(G.clock);
   $('clock').textContent = c.s;
-  $('dateTxt').textContent = `昭和20年4月${7 + c.d}日　${G.clock > 18 * 60 + 50 ? '夜間' : '曇・低雲'}`;
   $('distTxt').textContent = G.dist.toFixed(1);
-  $('routeFill').style.width = (100 * (1 - G.dist / TOTAL_NM)) + '%';
+  $('routeFill').style.width = (100 * progress()) + '%';
   $('killTxt').textContent = G.kills + G.aaKills;
   $('carTxt').textContent = G.csunk;
   $('torpTxt').textContent = G.torpHits; $('bombTxt').textContent = G.bombHits;
-  $('pfTxt').textContent = G.port.toFixed(0); $('pfBar').style.width = clamp(G.port / 80 * 100, 0, 100) + '%';
-  $('sfTxt').textContent = G.star.toFixed(0); $('sfBar').style.width = clamp(G.star / 80 * 100, 0, 100) + '%';
-  const buoy = clamp(100 - (G.port + G.star) / MAX_FLOOD * 100, 0, 100);
-  $('buoyTxt').textContent = buoy.toFixed(0) + '%'; $('buoyBar').style.width = buoy + '%';
-  $('hullTxt').textContent = Math.max(0, G.hull).toFixed(0) + '%'; $('hullBar').style.width = clamp(G.hull, 0, 100) + '%';
-  $('spdTxt').textContent = `${SPEEDS[G.speedIdx][1]} ${G.speed.toFixed(1)}ノット`;
-  const rd = G.turnRate / DEG;
-  $('rudTxt').textContent = Math.abs(rd) < 0.4 ? '舵 中央' : rd > 0 ? `取舵 ${Math.abs(rd * 4).toFixed(0)}°` : `面舵 ${Math.abs(rd * 4).toFixed(0)}°`;
-  $('enTxt').textContent = G.energy >= 100 ? 'エネルギー充填120%' : G.energy.toFixed(0) + '%';
+  const rem = Math.max(0, MAX_LIST - G.list);
+  const lt = $('listTxt'); lt.textContent = `横転まで あと ${rem.toFixed(1)}°`; lt.style.color = rem < 10 ? '#ff6a55' : '#e9e3d2';
+  $('enTxt').textContent = G.energy >= 100 ? '120%' : G.energy.toFixed(0) + '%';
   $('enBar').style.width = G.energy + '%';
-  $('ammoTxt').textContent = Math.floor(G.ammo); $('ammoBar').style.width = (G.ammo / 40 * 100) + '%';
-  $('cfTxt').textContent = G.cfCool > 0 ? `準備中 ${G.cfCool.toFixed(1)}s` : `可（実施 ${G.cfCount}回）`;
-  let wt = '';
-  if (G.charging) wt = G.charge >= 1 ? '波動砲 発射！（離せ）' : `エネルギー充填 ${(G.charge * 120).toFixed(0)}%`;
-  else if (G.energy >= 100) wt = '波動砲 発射可能';
-  $('waveTxt').textContent = wt;
-  drawCompass(); drawIncl(); if ((hudTick++ & 1) === 0) drawRadar();
-}
-function drawCompass() {
-  const W = 560, H = 44, x = cmp; x.clearRect(0, 0, W, H);
-  x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(0, 0, W, H);
-  const view = compassOf(-(G.heading + G.yaw)), shipB = compassOf(-G.heading);
-  const px = b => W / 2 + angWrap((b - view) * DEG) / DEG * 4;
-  x.strokeStyle = '#ddd'; x.fillStyle = '#ddd'; x.font = '12px serif'; x.textAlign = 'center';
-  for (let b = 0; b < 360; b += 5) {
-    const X = px(b); if (X < 0 || X > W) continue;
-    x.beginPath(); x.moveTo(X, H); x.lineTo(X, H - (b % 15 === 0 ? 10 : 5)); x.stroke();
-    if (b % 45 === 0) x.fillText(['北', '北東', '東', '南東', '南', '南西', '西', '北西'][b / 45], X, 14);
-    else if (b % 15 === 0) x.fillText(b, X, 14);
-  }
-  const mark = (b, col, txt, up) => { const X = px(b); if (X < -10 || X > W + 10) return;
-    x.fillStyle = col; x.beginPath(); if (up) { x.moveTo(X, H - 14); x.lineTo(X - 6, H - 3); x.lineTo(X + 6, H - 3); } else { x.moveTo(X, 30); x.lineTo(X - 6, 19); x.lineTo(X + 6, 19); } x.fill();
-    if (txt) { x.font = '11px serif'; x.fillText(txt, X, up ? H - 16 : 42); } };
-  mark(COURSE, '#7dffa0', '沖縄', false);
-  for (const c of carriers) if (c.alive) mark(compassOf(bearingOf(c.pos)), '#ff6a55', '', false);
-  mark(shipB, '#fff', '艦首', true);
-  x.fillStyle = '#ffd36a'; x.fillRect(W / 2 - 1, 0, 2, 8);
-  x.fillStyle = '#fff'; x.font = 'bold 12px serif'; x.textAlign = 'left'; x.fillText(`針路 ${shipB.toFixed(0)}°`, 6, 30);
+  const ready = G.energy >= 100;
+  $('beamBox').classList.toggle('ready', ready);
+  $('beamHint').textContent = ready ? (document.body.classList.contains('touch') ? '発射可能！ 波動砲ボタン' : '発射可能！ 右クリック / Space') : '充填中…（撃墜でも溜まる）';
+  $('lockHint').style.display = (!locked() && !document.body.classList.contains('touch') && G.elapsed < 20) ? 'block' : 'none';
+  drawIncl(); if ((hudTick++ & 1) === 0) drawRadar();
 }
 function drawIncl() {
-  const x = inc, W = 260, H = 120, cx = W / 2, cy = 104, R = 86; x.clearRect(0, 0, W, H);
-  x.lineWidth = 10;
-  const arc = (a0, a1, col) => { x.strokeStyle = col; x.beginPath(); x.arc(cx, cy, R, Math.PI * 1.5 + a0 * DEG * 2, Math.PI * 1.5 + a1 * DEG * 2); x.stroke(); };
-  arc(-40, 40, 'rgba(255,255,255,.12)'); arc(-40, -30, '#b8241a'); arc(-30, -18, '#c9851d'); arc(18, 30, '#c9851d'); arc(30, 40, '#b8241a');
-  x.lineWidth = 1; x.fillStyle = '#ccc'; x.font = '10px serif'; x.textAlign = 'center';
-  for (const a of [-30, -15, 0, 15, 30]) { const an = Math.PI * 1.5 + a * DEG * 2; x.fillText(Math.abs(a), cx + Math.cos(an) * (R - 16), cy + Math.sin(an) * (R - 16) + 4); }
-  const l = clamp(-G.list, -40, 40), an = Math.PI * 1.5 + l * DEG * 2;
-  x.strokeStyle = Math.abs(G.list) > 18 ? '#ff5a48' : '#fff'; x.lineWidth = 3;
-  x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(an) * (R + 4), cy + Math.sin(an) * (R + 4)); x.stroke();
-  x.fillStyle = Math.abs(G.list) > 18 ? '#ff5a48' : '#fff'; x.font = 'bold 15px serif';
-  x.fillText(`傾斜 ${G.list > 0.3 ? '左舷' : G.list < -0.3 ? '右舷' : ''} ${Math.abs(G.list).toFixed(1)}°`, cx, cy - 26);
-  x.font = '11px serif'; x.fillStyle = '#aaa'; x.fillText('左舷', cx - R + 8, cy + 12); x.fillText('右舷', cx + R - 8, cy + 12);
-  x.fillText(`横転限界 ${MAX_LIST}°`, cx, cy + 13);
+  const x = inc, W = 300, H = 150, cx = W / 2, cy = 128, R = 106; x.clearRect(0, 0, W, H);
+  x.lineWidth = 14;
+  const arc = (a0, a1, col) => { x.strokeStyle = col; x.beginPath(); x.arc(cx, cy, R, Math.PI * 1.5 + a0 * DEG * 2.2, Math.PI * 1.5 + a1 * DEG * 2.2); x.stroke(); };
+  arc(-36, 36, 'rgba(255,255,255,.12)'); arc(-36, -30, '#b8241a'); arc(-30, -20, '#c9851d');
+  x.lineWidth = 1; x.fillStyle = '#ccc'; x.font = '11px serif'; x.textAlign = 'center';
+  for (const a of [-30, -20, -10, 0, 10]) { const an = Math.PI * 1.5 + a * DEG * 2.2; x.fillText(Math.abs(a) + '°', cx + Math.cos(an) * (R - 20), cy + Math.sin(an) * (R - 20) + 4); }
+  // 艦影（傾く大和の断面）
+  x.save(); x.translate(cx, cy - 8); x.rotate(-G.list * DEG);
+  x.fillStyle = Math.abs(G.list) > 20 ? '#ff6a55' : '#e9e3d2';
+  x.beginPath(); x.moveTo(-30, 0); x.lineTo(30, 0); x.lineTo(24, 12); x.lineTo(-24, 12); x.closePath(); x.fill();
+  x.fillRect(-10, -12, 20, 12); x.fillRect(-4, -26, 8, 14);
+  x.restore();
+  const l = clamp(-G.list, -36, 36), an = Math.PI * 1.5 + l * DEG * 2.2;
+  x.strokeStyle = Math.abs(G.list) > 20 ? '#ff5a48' : '#fff'; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(cx + Math.cos(an) * (R - 34), cy + Math.sin(an) * (R - 34)); x.lineTo(cx + Math.cos(an) * (R + 8), cy + Math.sin(an) * (R + 8)); x.stroke();
+  x.fillStyle = Math.abs(G.list) > 20 ? '#ff5a48' : '#fff'; x.font = 'bold 18px serif';
+  x.fillText(`傾斜 ${G.list > 0.3 ? '左' : G.list < -0.3 ? '右' : ''} ${Math.abs(G.list).toFixed(1)}°`, cx, cy - 48);
+  x.font = '12px serif'; x.fillStyle = '#ff8b78'; x.fillText('左舷', cx - R - 2, cy + 16); x.fillStyle = '#aaa'; x.fillText('右舷', cx + R + 2, cy + 16);
 }
 function drawRadar() {
   const x = rdr, S = 170, c = S / 2, R = 80, range = 3200; x.clearRect(0, 0, S, S);
   x.fillStyle = 'rgba(8,24,16,.6)'; x.beginPath(); x.arc(c, c, R, 0, Math.PI * 2); x.fill();
   x.strokeStyle = 'rgba(120,255,160,.3)'; x.lineWidth = 1;
   for (const r of [R / 3, R * 2 / 3, R]) { x.beginPath(); x.arc(c, c, r, 0, Math.PI * 2); x.stroke(); }
-  x.beginPath(); x.moveTo(c, c - R); x.lineTo(c, c + R); x.moveTo(c - R, c); x.lineTo(c + R, c); x.stroke();
-  const pt = p => { const l = toLocal(p); return [c + l.x / range * R, c + l.z / range * R, Math.hypot(l.x, l.z)]; };
-  // 左舷の危険域
   x.fillStyle = 'rgba(255,80,60,.08)'; x.beginPath(); x.moveTo(c, c); x.arc(c, c, R, Math.PI * 0.5, Math.PI * 1.5); x.fill();
-  for (const e of escorts) if (e.mesh.visible) { const [X, Y, d] = pt(e.mesh.position); if (d < range) { x.fillStyle = '#9ab'; x.fillRect(X - 1.5, Y - 1.5, 3, 3); } }
-  for (const t of torps) { const [X, Y, d] = pt(t.pos); if (d < range) { const l2 = pt(tmpV2.copy(t.pos).addScaledVector(t.dir, 200)); x.strokeStyle = '#ff5a48'; x.lineWidth = 2; x.beginPath(); x.moveTo(X, Y); x.lineTo(l2[0], l2[1]); x.stroke(); } }
-  for (const pl of planes) { if (pl.state === 'falling') continue; const [X, Y, d] = pt(pl.pos); if (d < range) { x.fillStyle = pl.T.color; x.beginPath(); x.arc(X, Y, 2.5, 0, Math.PI * 2); x.fill(); } }
+  const pt = p => { const l = toLocal(p); return [c + l.x / range * R, c + l.z / range * R, Math.hypot(l.x, l.z)]; };
+  for (const t of torps) { const [X, Y, d] = pt(t.pos); if (d < range) { const l2 = pt(tmpV2.copy(t.pos).addScaledVector(t.dir, 220)); x.strokeStyle = '#ff5a48'; x.lineWidth = 2; x.beginPath(); x.moveTo(X, Y); x.lineTo(l2[0], l2[1]); x.stroke(); } }
+  for (const pl of planes) { if (pl.state === 'falling') continue; const [X, Y, d] = pt(pl.pos); if (d < range) { x.fillStyle = pl.T.color; x.fillRect(X - 1.5, Y - 1.5, 3, 3); } }
   for (const cc of carriers) if (cc.alive) { const l = toLocal(cc.pos), a = Math.atan2(l.z, l.x); x.fillStyle = '#ff6a55'; x.beginPath(); x.arc(c + Math.cos(a) * (R - 4), c + Math.sin(a) * (R - 4), 4, 0, Math.PI * 2); x.fill(); }
   x.fillStyle = '#fff'; x.beginPath(); x.moveTo(c, c - 8); x.lineTo(c - 4, c + 6); x.lineTo(c + 4, c + 6); x.fill();
-  // 視線方向
-  x.strokeStyle = 'rgba(255,220,120,.6)'; x.beginPath(); x.moveTo(c, c); x.lineTo(c - Math.sin(G.yaw) * R, c - Math.cos(G.yaw) * R); x.stroke();
-  x.fillStyle = '#9fd'; x.font = '10px serif'; x.textAlign = 'center'; x.fillText('電探 3.2km', c, S - 2);
+  x.strokeStyle = 'rgba(255,220,120,.7)'; x.beginPath(); x.moveTo(c, c); x.lineTo(c - Math.sin(G.yaw) * R, c - Math.cos(G.yaw) * R); x.stroke();
+  x.fillStyle = '#9fd'; x.font = '10px serif'; x.textAlign = 'center'; x.fillText('電探（黄線＝視線）', c, S - 2);
 }
 const projV = V3();
 function project(p) { projV.copy(p).project(camera); if (projV.z > 1 || projV.z < -1) return null; return [(projV.x + 1) / 2 * innerWidth, (1 - projV.y) / 2 * innerHeight]; }
@@ -1436,51 +1427,42 @@ function drawOverlay() {
   const x = ovc; x.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
   if (G && G.flash > 0) { x.fillStyle = `rgba(220,245,255,${G.flash * 0.85})`; x.fillRect(0, 0, innerWidth, innerHeight); }
   if (state !== 'play') return;
-  x.lineWidth = 1.5; x.font = '11px serif'; x.textAlign = 'center';
+  x.lineWidth = 1.5; x.font = 'bold 12px serif'; x.textAlign = 'center';
   for (const pl of planes) {
     if (pl.state === 'falling') continue;
-    const d = pl.pos.distanceTo(camera.position); if (d > 4500) continue;
+    const d = pl.pos.distanceTo(camera.position); if (d > 3500) continue;
     const s = project(pl.pos); if (!s) continue;
-    const r = clamp(2400 / d * 6, 7, 22);
-    x.strokeStyle = pl.T.color; x.fillStyle = pl.T.color;
+    const r = clamp(2000 / d * 5, 6, 18);
+    x.strokeStyle = pl.T.color;
     x.beginPath();
     for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { x.moveTo(s[0] + sx * r, s[1] + sy * r * 0.4); x.lineTo(s[0] + sx * r, s[1] + sy * r); x.lineTo(s[0] + sx * r * 0.4, s[1] + sy * r); }
     x.stroke();
-    x.fillText(`${pl.T.short} ${(d / 1000).toFixed(1)}`, s[0], s[1] - r - 3);
+    if (pl.type === 'torp' && pl.state !== 'egress') { x.fillStyle = pl.T.color; x.fillText('雷', s[0], s[1] - r - 3); }
   }
   for (const t of torps) {
     const s = project(t.pos); if (!s) continue;
-    x.fillStyle = '#ff5a48'; x.beginPath(); x.moveTo(s[0], s[1] - 6); x.lineTo(s[0] - 5, s[1] - 14); x.lineTo(s[0] + 5, s[1] - 14); x.fill();
+    x.fillStyle = '#ff5a48'; x.beginPath(); x.moveTo(s[0], s[1] - 6); x.lineTo(s[0] - 6, s[1] - 16); x.lineTo(s[0] + 6, s[1] - 16); x.fill();
   }
   for (const c of carriers) {
     if (!c.alive) continue;
     const s = project(tmpV2.copy(c.pos).setY(40)); if (!s) continue;
     x.strokeStyle = '#ff6a55'; x.fillStyle = '#ff6a55'; x.strokeRect(s[0] - 26, s[1] - 10, 52, 20);
-    x.fillText(`空母 ${c.name} ${(c.pos.distanceTo(G.pos) / 1000).toFixed(1)}km`, s[0], s[1] - 15);
-  }
-  // 艦首方位（波動砲の射線）
-  const bowFar = fromLocal(0, 10, -6000, V3());
-  const sb = project(bowFar);
-  if (sb) {
-    let aligned = false;
-    for (const c of carriers) if (c.alive) { const l = toLocal(c.pos); if (l.z < 0 && Math.abs(l.x) < 190) aligned = true; }
-    x.strokeStyle = aligned ? '#7fe3ff' : 'rgba(127,227,255,.55)'; x.lineWidth = aligned ? 2.5 : 1.5;
-    x.beginPath(); x.arc(sb[0], sb[1], 16, 0, Math.PI * 2); x.moveTo(sb[0] - 26, sb[1]); x.lineTo(sb[0] - 8, sb[1]); x.moveTo(sb[0] + 8, sb[1]); x.lineTo(sb[0] + 26, sb[1]); x.stroke();
-    x.fillStyle = x.strokeStyle; x.fillText(aligned ? '波動砲 照準良し！' : '艦首（波動砲射線）', sb[0], sb[1] + 30);
+    x.font = '11px serif'; x.fillText(`敵空母 ${c.name}`, s[0], s[1] - 15); x.font = 'bold 12px serif';
   }
   // 照準
-  if (!document.body.classList.contains('touch') || mouse.down) {
-    const mx = mouse.sx, my = mouse.sy;
-    x.strokeStyle = 'rgba(255,240,200,.9)'; x.lineWidth = 1.5;
-    x.beginPath(); x.arc(mx, my, 12, 0, Math.PI * 2); x.moveTo(mx - 20, my); x.lineTo(mx - 6, my); x.moveTo(mx + 6, my); x.lineTo(mx + 20, my);
-    x.moveTo(mx, my - 20); x.lineTo(mx, my - 6); x.moveTo(mx, my + 6); x.lineTo(mx, my + 20); x.stroke();
-  }
-  // 傾斜警報の赤縁
+  const centered = locked() || document.body.classList.contains('touch');
+  const mx = centered ? innerWidth / 2 : mouse.sx, my = centered ? innerHeight / 2 : mouse.sy;
+  const ready = G.energy >= 100;
+  x.strokeStyle = ready ? 'rgba(127,227,255,.95)' : 'rgba(255,240,200,.95)'; x.lineWidth = 2;
+  x.beginPath(); x.arc(mx, my, 14, 0, Math.PI * 2); x.moveTo(mx - 24, my); x.lineTo(mx - 7, my); x.moveTo(mx + 7, my); x.lineTo(mx + 24, my);
+  x.moveTo(mx, my - 24); x.lineTo(mx, my - 7); x.moveTo(mx, my + 7); x.lineTo(mx, my + 24); x.stroke();
+  if (ready) { x.beginPath(); x.arc(mx, my, 22 + Math.sin(T * 8) * 3, 0, Math.PI * 2); x.stroke(); }
+  // 傾斜の危険表示
   if (G.list > 18) {
     const a = (G.list - 18) / 12 * (0.5 + 0.5 * Math.sin(T * 8));
-    const gr = x.createLinearGradient(0, 0, innerWidth * 0.3, 0);
-    gr.addColorStop(0, `rgba(200,20,10,${0.55 * a})`); gr.addColorStop(1, 'rgba(200,20,10,0)');
-    x.fillStyle = gr; x.fillRect(0, 0, innerWidth * 0.3, innerHeight);
+    const gr = x.createLinearGradient(0, 0, innerWidth * 0.35, 0);
+    gr.addColorStop(0, `rgba(200,20,10,${0.6 * a})`); gr.addColorStop(1, 'rgba(200,20,10,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, innerWidth * 0.35, innerHeight);
   }
 }
 
@@ -1491,15 +1473,15 @@ let endT = 0, orbitA = 0, endExploded = false, viewOnly = false;
 function endGame(cause) {
   state = 'ending'; endT = 0; endExploded = false; viewOnly = false;
   G.endCause = cause; G.endClock = G.clock;
+  if (locked()) document.exitPointerLock();
   document.body.classList.remove('playing');
   $('alert').style.opacity = 0;
-  muzzle.visible = false; G.charging = false;
-  // カメラを艦外へ
   head.remove(camera); scene.add(camera);
   orbitA = G.heading + Math.PI * 0.75;
-  if (cause !== 'win') { AU.alarm(); }
+  if (cause !== 'win') { AU.alarm(); BGM.fade(0.12, 2); } else BGM.fade(0.45, 1);
   if (AU.ctx) AU.droneGain.gain.value = 0;
   for (const pl of planes) if (pl.state !== 'falling') pl.state = 'egress';
+  mouse.down = false;
 }
 function updateEnding(dt) {
   endT += dt;
@@ -1508,36 +1490,27 @@ function updateEnding(dt) {
     G.speed = lerp(G.speed, 6, dt * 0.2);
     G.vel.copy(fwdV()).multiplyScalar(G.speed * 0.8);
     G.pos.addScaledVector(G.vel, dt);
-    G.list = lerp(G.list, 0, dt * 0.2);
-    G.turnRate = lerp(G.turnRate, 0, dt);
-    setDaylight(lerp(oceanUniforms.uDay.value, 0.75, dt * 0.3));
-    updateShipTransform(dt);
-    updateIsland();
+    G.list = lerp(G.list, 0, dt * 0.2); G.turnRate = lerp(G.turnRate, 0, dt);
+    updateShipTransform(dt); updateIsland(); shipEffects(dt);
   } else {
     // 左舷へ横転→沈没→弾火薬庫誘爆
     const roll = Math.min(125, G.list + endT * endT * 1.6);
-    G.turnRate = lerp(G.turnRate, 0, dt);
     G.speed = lerp(G.speed, 0, dt * 0.3);
     G.pos.addScaledVector(fwdV(), G.speed * 0.5 * dt);
-    ship.position.set(G.pos.x, -Math.max(0, endT - 4) * Math.max(0, endT - 4) * 0.35, G.pos.z);
-    ship.rotation.y = G.heading; ship.rotation.x = Math.min(0.15, endT * 0.01);
-    ship.rotation.z = roll * DEG;
+    ship.position.set(G.pos.x, -Math.pow(Math.max(0, endT - 4), 2) * 0.35, G.pos.z);
+    ship.rotation.y = G.heading; ship.rotation.x = Math.min(0.15, endT * 0.01); ship.rotation.z = roll * DEG;
     if (endT < 9) for (let i = 0; i < 3; i++) { const p = ship.localToWorld(V3(rand(-15, 15), rand(0, 20), rand(-120, 120))); PN.spawn(p.x, Math.max(1, p.y), p.z, 0, 6, 0, 6, 10, 40, 0.1, 0.1, 0.1, 0.7, -0.4, 0.3); }
     if (endT > 8.5 && !endExploded) {
       endExploded = true;
       const p = V3(G.pos.x, 10, G.pos.z);
-      // 史実の大爆発（きのこ雲は鹿児島からも見えたという）
       for (let i = 0; i < 500; i++) PA.spawn(p.x + rand(-30, 30), p.y + rand(0, 40), p.z + rand(-30, 30), rand(-25, 25), rand(40, 220), rand(-25, 25), rand(1.5, 4), 30, 90, 1, rand(0.4, 0.75), 0.15, 0.9, 25, 0.4);
       for (let i = 0; i < 450; i++) PN.spawn(p.x + rand(-40, 40), p.y + rand(0, 60), p.z + rand(-40, 40), rand(-20, 20), rand(30, 160), rand(-20, 20), rand(12, 22), 40, 260, 0.1, 0.09, 0.08, 0.85, 4, 0.25);
-      splash(p, 6);
-      G.flash = 1; AU.boom(0, 3);
+      splash(p, 6); G.flash = 1; AU.boom(0, 3);
     }
+    for (const e of emitters) { const p = ship.localToWorld(V3(e.lx, e.ly, e.lz)); if (p.y > 0) PN.spawn(p.x, p.y, p.z, 0, 7, 0, 5, 6, 30, 0.08, 0.08, 0.08, 0.7, -0.5, 0.3); }
     updateEscorts(dt);
   }
-  updateCarriers(dt);
-  updatePlanes(dt); updateOrdnance(dt);
-  shipEffectsEnding(dt, win);
-  // 周回カメラ
+  updateCarriers(dt); updatePlanes(dt); updateOrdnance(dt);
   orbitA += dt * (win ? 0.12 : 0.08);
   const R = win ? 400 : 380 + endT * 9, H = win ? 95 : 85 + endT * 5;
   camera.position.set(G.pos.x + Math.cos(orbitA) * R, H, G.pos.z + Math.sin(orbitA) * R);
@@ -1545,33 +1518,23 @@ function updateEnding(dt) {
   G.flash = Math.max(0, G.flash - dt * 0.5);
   if (endT > (win ? 4 : 13) && !$('result').dataset.shown && !viewOnly) showResult();
 }
-function shipEffectsEnding(dt, win) {
-  if (win) { shipEffects(dt); return; }
-  for (let i = emitters.length - 1; i >= 0; i--) {
-    const e = emitters[i]; const p = ship.localToWorld(V3(e.lx, e.ly, e.lz));
-    if (p.y > 0) PN.spawn(p.x, p.y, p.z, 0, 7, 0, 5, 6, 30, 0.08, 0.08, 0.08, 0.7, -0.5, 0.3);
-  }
-}
 function showResult() {
   const r = $('result'); r.dataset.shown = '1'; r.style.display = 'flex';
   const win = G.endCause === 'win', c = fmtClock(G.endClock);
   $('resTitle').textContent = win ? '沖縄 到達' : '大和 沈没';
   $('resTitle').style.color = win ? '#e9d48a' : '#e9e3d2';
-  const cause = { capsize: '左舷への浸水により傾斜が限界を超え、左へ横転', flood: '浸水が予備浮力を超え、浮力を喪失', explode: '度重なる被弾により弾火薬庫が誘爆', win: '天一号作戦 成功' }[G.endCause];
-  $('resSub').textContent = `昭和20年4月${7 + c.d}日 ${c.s}　${cause}`;
-  const st = [
-    ['敵機撃墜（ロケット・波動砲）', G.kills], ['対空砲火による撃墜', G.aaKills], ['敵空母撃沈', `${G.csunk} / 6`],
-    ['被雷', `${G.torpHits} 本`], ['被弾', `${G.bombHits} 発`], ['注排水', `${G.cfCount} 回`],
-    ['受けた攻撃隊', `${G.wave} 波`], ['残り航程', `${G.dist.toFixed(1)} 浬`],
-  ];
+  $('resSub').textContent = `昭和20年4月${7 + c.d}日 ${c.s}　${win ? '天一号作戦 成功' : '左舷への被害で傾斜30°に達し、左へ横転'}`;
+  const m = Math.floor(G.elapsed / 60), s = Math.floor(G.elapsed % 60);
+  const st = [['敵機撃墜', G.kills + G.aaKills], ['敵空母撃沈', `${G.csunk} / 6`], ['被雷', `${G.torpHits} 本`], ['被弾', `${G.bombHits} 発`],
+    ['耐えた時間', `${m}分${String(s).padStart(2, '0')}秒`], ['残り航程', `${G.dist.toFixed(1)} 浬`]];
   $('resStats').innerHTML = st.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('');
   $('resHist').textContent = win
-    ? '史実の大和は沖縄にたどり着けなかった。1945年4月7日14時23分、米軍機延べ約386機の攻撃を受け、左舷に魚雷を集中された大和は左へ横転、弾火薬庫が誘爆して鹿児島県坊ノ岬沖（北緯30度43分 東経128度04分付近）に沈んだ。乗員約3,332名のうち生存者は276名、第二艦隊全体の戦死者は約3,700名にのぼる（数値は諸説あり）。このゲームの結末は、かなわなかった「もしも」である。'
+    ? '史実の大和は沖縄にたどり着けなかった。1945年4月7日14時23分、米軍機延べ約386機の攻撃を受け、左舷に魚雷を集中された大和は左へ横転、弾火薬庫が誘爆して坊ノ岬沖（北緯30度43分 東経128度04分付近）に沈んだ。乗員約3,332名のうち生存者は276名、第二艦隊全体の戦死者は約3,700名にのぼる（数値は諸説あり）。このゲームの結末は、かなわなかった「もしも」である。'
     : '史実：1945年4月7日14時23分、大和は米第58任務部隊の艦載機延べ約386機の攻撃を受け、左舷に集中した魚雷（10本以上、諸説あり）と多数の爆弾により左へ傾斜。右舷への注水も及ばず横転し、弾火薬庫の誘爆とともに坊ノ岬沖（北緯30度43分 東経128度04分付近）に沈没した。その火柱と煙は鹿児島からも望見されたという。乗員約3,332名のうち生存者は276名。第二艦隊全体の戦死者は約3,700名にのぼる。';
 }
 
 // ============================================================
-//  タイトル画面
+//  タイトル・開始
 // ============================================================
 let titleA = 0;
 function updateTitle(dt) {
@@ -1586,19 +1549,19 @@ document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click'
   diff = +b.dataset.diff; document.querySelectorAll('[data-diff]').forEach(x => x.classList.toggle('sel', x === b));
 }));
 function startGame() {
-  AU.init();
+  AU.init(); BGM.start(); BGM.fade(0.33, 0.5);
   newGame();
   $('title').style.display = 'none'; $('result').style.display = 'none'; delete $('result').dataset.shown;
   if (camera.parent !== head) { if (camera.parent) camera.parent.remove(camera); head.add(camera); }
   camera.position.set(0, 0, 0); camera.rotation.set(G.pitch, 0, 0);
+  G.yaw = 35 * DEG;   // 左舷寄りを向いて開始
   state = 'play'; document.body.classList.add('playing');
   setDaylight(1);
-  msg('昭和20年4月7日 坊ノ岬沖。第一遊撃部隊、針路190°で沖縄へ向かう', 'hist');
-  msg('駆逐艦「朝霜」は機関故障により落伍', 'hist');
+  msg('昭和20年4月7日 坊ノ岬沖。第一遊撃部隊、沖縄へ向かう', 'hist');
 }
 $('startBtn').addEventListener('click', startGame);
 $('againBtn').addEventListener('click', startGame);
-$('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') { $('result').style.display = 'flex'; } }, 15000); });
+$('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') $('result').style.display = 'flex'; }, 15000); });
 
 // ============================================================
 //  メインループ
@@ -1614,10 +1577,9 @@ function frame(now) {
   for (let i = beams.length - 1; i >= 0; i--) {
     const b = beams[i]; b.t += dt;
     const k = Math.max(0, 1 - b.t / 1.8);
-    b.g.children.forEach((m, j) => { m.material.opacity = [0.95, 0.4, 0.15][j] * k; const s = 1 + Math.sin(T * 50) * 0.08 + (1 - k) * 0.6; m.scale.set(s, 1, s); });
+    b.g.children.forEach((m, j) => { m.material.opacity = [0.95, 0.35, 0.12][j] * k; const s = 1 + Math.sin(T * 50) * 0.08 + (1 - k) * 0.6; m.scale.set(s, 1, s); });
     if (b.t > 1.8) { scene.remove(b.g); b.g.children.forEach(m => { m.geometry.dispose(); m.material.dispose(); }); beams.splice(i, 1); }
   }
-  // 海面・空・雲をカメラに追従
   const cp = camera.getWorldPosition(tmpV);
   const step = OCEAN_SIZE / OCEAN_SEG;
   ocean.position.set(Math.round(cp.x / step) * step, 0, Math.round(cp.z / step) * step);
