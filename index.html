@@ -179,6 +179,7 @@ const tmpV = V3(), tmpV2 = V3();
 // ============================================================
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(innerWidth, innerHeight);
 $('game').appendChild(renderer.domElement);
 
@@ -192,9 +193,12 @@ scene.background = fogColor;
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.5, 22000);
 const hemi = new THREE.HemisphereLight(0xc8d0d8, 0x2a3540, 0.9);
 scene.add(hemi);
-const sunLight = new THREE.DirectionalLight(0xfff2e0, 0.55);
+const sunLight = new THREE.DirectionalLight(0xfff2e0, 0.7);
 sunLight.position.set(-0.4, 1, 0.3);
-scene.add(sunLight);
+sunLight.castShadow = true;
+Object.assign(sunLight.shadow.camera, { left: -170, right: 170, top: 170, bottom: -170, near: 10, far: 1400 });
+sunLight.shadow.mapSize.set(2048, 2048); sunLight.shadow.bias = -0.0004; sunLight.shadow.normalBias = 0.3;
+scene.add(sunLight, sunLight.target);
 
 // 空（曇天のグラデーション）
 const skyMat = new THREE.ShaderMaterial({
@@ -429,7 +433,7 @@ function makeHull(L, B, freeboard, draft, sheer, topCol, botCol, mat) {
 }
 
 const Y_LEN = 263, Y_BEAM = 38.9, Y_FB = 10;
-function yHalfW(lz) { const t = (lz + Y_LEN / 2) / Y_LEN; return t < 0 || t > 1 ? -1 : Y_BEAM / 2 * hullWidth(t); }
+function yHalfW(lz) { return yamatoW((lz + Y_LEN / 2) / Y_LEN); }
 
 function turret(parent, z, y, rotY, s, blen, mat) {
   const t = new THREE.Group(); t.position.set(0, y, z); t.rotation.y = rotY; parent.add(t);
@@ -459,59 +463,265 @@ function makeEnsign() {
   return new THREE.Mesh(new THREE.PlaneGeometry(6, 4), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c), side: THREE.DoubleSide }));
 }
 
-function makeYamato() {
+// ------------------------------------------------------------
+//  戦艦大和（詳細モデル）
+// ------------------------------------------------------------
+const YM = {
+  hull: new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 18, specular: 0x262a2e }),
+  steel: new THREE.MeshPhongMaterial({ color: 0x6f777d, shininess: 22, specular: 0x30363a }),
+  steel2: new THREE.MeshPhongMaterial({ color: 0x61696e, shininess: 22, specular: 0x30363a }),
+  dark: new THREE.MeshPhongMaterial({ color: 0x2c3135, shininess: 30, specular: 0x333333 }),
+  gun: new THREE.MeshPhongMaterial({ color: 0x5d6569, shininess: 40, specular: 0x444a4e }),
+  bag: new THREE.MeshLambertMaterial({ color: 0x8a8577 }),
+  black: new THREE.MeshLambertMaterial({ color: 0x141618 }),
+  glass: new THREE.MeshPhongMaterial({ color: 0x0d1418, shininess: 90, specular: 0x8899aa }),
+  deck: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+  plane: new THREE.MeshLambertMaterial({ color: 0x5d6b52 }),
+  gold: new THREE.MeshPhongMaterial({ color: 0xe8be4c, emissive: 0x5a3c00, shininess: 80, specular: 0xfff0b0, side: THREE.DoubleSide }),
+  light: new THREE.MeshBasicMaterial({ color: 0xdfe8ff }),
+};
+// 船体側面のテクスチャ（赤い船底・黒い水線帯・外板の継ぎ目・舷窓）
+(function () {
+  const c = document.createElement('canvas'); c.width = 4096; c.height = 512; const x = c.getContext('2d');
+  const vy = y => (1 - (y + 11) / 25) * 512;   // 高さ(m) → テクスチャ座標
+  x.fillStyle = '#727a80'; x.fillRect(0, 0, 4096, 512);
+  const g = x.createLinearGradient(0, vy(15), 0, vy(0)); g.addColorStop(0, 'rgba(255,255,255,.05)'); g.addColorStop(1, 'rgba(0,0,0,.12)');
+  x.fillStyle = g; x.fillRect(0, vy(15), 4096, vy(0) - vy(15));
+  x.strokeStyle = 'rgba(30,35,40,.22)'; x.lineWidth = 2;
+  for (let y = 1.5; y < 15; y += 2.4) { x.beginPath(); x.moveTo(0, vy(y)); x.lineTo(4096, vy(y)); x.stroke(); }
+  for (let u = 0; u < 4096; u += 4096 / 34) { x.beginPath(); x.moveTo(u, vy(15)); x.lineTo(u, vy(-0.3)); x.stroke(); }
+  x.fillStyle = '#5e2620'; x.fillRect(0, vy(-0.4), 4096, 512 - vy(-0.4));
+  x.fillStyle = 'rgba(0,0,0,.18)'; for (let u = 0; u < 4096; u += 4096 / 34) x.fillRect(u, vy(-0.4), 2, 200);
+  x.fillStyle = '#16181a'; x.fillRect(0, vy(1.1), 4096, vy(-0.4) - vy(1.1));
+  x.fillStyle = '#1b1f22';
+  for (const [y, a, b] of [[5.2, 0.06, 0.92], [7.6, 0.04, 0.8]]) for (let u = a * 4096; u < b * 4096; u += 26) { x.beginPath(); x.arc(u, vy(y), 3.2, 0, Math.PI * 2); x.fill(); }
+  // 喫水標
+  x.fillStyle = '#d8d8d0'; x.font = 'bold 18px serif';
+  for (const u of [40, 4040]) for (let k = 0; k < 5; k++) x.fillText(String(10 - k * 2), u, vy(-k * 2 + 0.2));
+  YM.hullTex = new THREE.CanvasTexture(c); YM.hullTex.anisotropy = 4;
+  YM.hull.map = YM.hullTex;
+  // 甲板（檜の板張り）
+  const d = document.createElement('canvas'); d.width = d.height = 256; const dx = d.getContext('2d');
+  dx.fillStyle = '#9b8d74'; dx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 16; i++) {
+    dx.fillStyle = `rgba(${90 + Math.random() * 40},${70 + Math.random() * 30},40,${0.08 + Math.random() * 0.1})`; dx.fillRect(i * 16, 0, 16, 256);
+    dx.fillStyle = 'rgba(40,30,20,.45)'; dx.fillRect(i * 16, 0, 1, 256);
+    const off = Math.random() * 256; dx.fillRect(i * 16, off, 16, 1);
+  }
+  YM.deckTex = new THREE.CanvasTexture(d); YM.deckTex.wrapS = YM.deckTex.wrapT = THREE.RepeatWrapping; YM.deckTex.anisotropy = 4;
+  YM.deck.map = YM.deckTex;
+})();
+
+function yamatoW(t) {   // 甲板の半幅（0=艦首 1=艦尾、円形の巡洋艦型艦尾）
+  if (t < 0 || t > 1) return -1;
+  let w = hullWidth(t);
+  if (t > 0.94) w *= Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.94) / 0.06, 2)));
+  return Y_BEAM / 2 * w;
+}
+function yDeckH(t) {   // 大和特有の波打つ舷弧
+  const P = [[0, 14.6], [0.07, 12.8], [0.17, 11.1], [0.3, 10.25], [0.6, 10], [0.74, 10], [0.79, 9.1], [1, 8.9]];
+  for (let i = 1; i < P.length; i++) if (t <= P[i][0]) { const [t0, h0] = P[i - 1], [t1, h1] = P[i], u = (t - t0) / (t1 - t0); return h0 + (h1 - h0) * u * u * (3 - 2 * u); }
+  return 8.9;
+}
+function yDeckAt(lz) { return yDeckH(clamp((lz + Y_LEN / 2) / Y_LEN, 0, 1)); }
+
+function makeYamatoHull() {
+  const L = Y_LEN, NS = 120, NR = 16, draft = 10.4;
+  const pos = [], uv = [], idx = [], dpos = [], duv = [], didx = [];
+  for (let side = 0; side < 2; side++) {
+    const sg = side ? -1 : 1, base = pos.length / 3;
+    for (let i = 0; i <= NS; i++) {
+      const t = Math.pow(i / NS, 1.0), zc = -L / 2 + t * L;
+      const hw = Math.max(0, yamatoW(t)), wl = hw * (t < 0.3 ? lerp(0.78, 0.97, t / 0.3) : 0.98);
+      const dH = yDeckH(t);
+      const keel = t < 0.05 ? lerp(1.5, draft, Math.pow(t / 0.05, 0.6)) : (t > 0.9 ? lerp(draft, 3, (t - 0.9) / 0.1) : draft);
+      const rake = Math.max(0, 1 - t / 0.075);
+      for (let j = 0; j <= NR; j++) {
+        const s = j / NR; let x, y;
+        if (s < 0.55) { const a = s / 0.55 * Math.PI / 2; x = wl * Math.pow(Math.sin(a), 0.45); y = -keel * Math.pow(Math.cos(a), 0.45); }
+        else { const u = (s - 0.55) / 0.45; y = u * dH; x = wl + (hw - wl) * Math.pow(u, 1.4); }
+        const z = zc + (1 - (y + keel) / (dH + keel)) * 11 * rake;
+        pos.push(sg * x, y, z); uv.push(t, (y + 11) / 25);
+      }
+    }
+    for (let i = 0; i < NS; i++) for (let j = 0; j < NR; j++) {
+      const a = base + i * (NR + 1) + j, b = a + NR + 1, c = a + 1, d = b + 1;
+      if (sg > 0) idx.push(a, c, b, c, d, b); else idx.push(a, b, c, c, b, d);
+    }
+  }
+  for (let i = 0; i <= NS; i++) {
+    const t = i / NS, z = -L / 2 + t * L, hw = Math.max(0, yamatoW(t)), y = yDeckH(t) + 0.02;
+    dpos.push(-hw, y, z, hw, y, z); duv.push(-hw / 4, z / 9, hw / 4, z / 9);
+    if (i < NS) { const p = i * 2; didx.push(p, p + 2, p + 1, p + 1, p + 2, p + 3); }
+  }
+  const hg = new THREE.BufferGeometry();
+  hg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); hg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  hg.setIndex(idx); hg.computeVertexNormals();
+  const dg = new THREE.BufferGeometry();
+  dg.setAttribute('position', new THREE.Float32BufferAttribute(dpos, 3)); dg.setAttribute('uv', new THREE.Float32BufferAttribute(duv, 2));
+  dg.setIndex(didx); dg.computeVertexNormals();
   const g = new THREE.Group();
-  const hull = makeHull(Y_LEN, Y_BEAM, Y_FB, 10.5, 5.5, 0x7a8288, 0x6a2a20); g.add(hull);
-  const D = Y_FB; // 中央部甲板高さ
-  turret(g, -80, D + 1.4, 0, 1, 21, MAT.gray);
-  turret(g, -58, D + 5.2, 0, 1, 21, MAT.gray);
-  cyl(7.4, 7.8, 4.6, MAT.gray2, 0, D + 2.6, -58, g, 20);
-  turret(g, 74, D, Math.PI, 1, 21, MAT.gray);
-  // 副砲
-  turret(g, -38, D + 9.2, 0, 0.55, 11, MAT.gray);
-  turret(g, 46, D + 6.2, Math.PI, 0.55, 11, MAT.gray);
-  // 上部構造
-  box(23, 9, 58, MAT.gray, 0, D + 4.5, -4, g);
-  box(17, 5, 18, MAT.gray2, 0, D + 3, 34, g);
-  box(14, 3, 34, MAT.gray, 0, D + 10.5, 0, g);
-  // 艦橋（塔型）
-  box(12, 9, 12, MAT.gray, 0, D + 16.5, -17, g);
-  cyl(4.6, 5.8, 13, MAT.gray, 0, D + 27.5, -17, g);
-  box(14.5, 3.6, 9, MAT.gray, 0, D + 35.2, -18.5, g);
-  box(14.7, 1.1, 9.2, MAT.glass, 0, D + 35.6, -18.5, g);
-  box(9, 3, 7, MAT.gray, 0, D + 38.6, -17.5, g);
-  box(15.5, 1.6, 2, MAT.dark, 0, D + 41.2, -17, g);
-  cyl(2.4, 2.4, 2.2, MAT.gray, 0, D + 42.6, -17, g);
-  for (const s of [-1, 1]) box(4, 1.2, 4, MAT.gray2, s * 9.5, D + 33.5, -18, g);
-  // 煙突（後方へ傾斜した大和特有の形）
-  const fun = new THREE.Group(); fun.position.set(0, D + 17, 4); fun.rotation.x = 0.36; g.add(fun);
-  const fc = cyl(5.2, 6.6, 15, MAT.gray, 0, 6, 0, fun, 18); fc.scale.x = 0.75;
-  const cap = cyl(5.0, 5.2, 1.4, MAT.black, 0, 14, 0, fun, 18); cap.scale.x = 0.75;
-  // 後檣
-  cyl(0.6, 1.0, 26, MAT.dark, 0, D + 22, 23, g, 8);
-  box(16, 0.5, 0.5, MAT.dark, 0, D + 30, 23, g);
-  const ens = makeEnsign(); ens.position.set(0, D + 33, 26.5); ens.rotation.y = Math.PI / 2; g.add(ens);
-  g.userData.ensign = ens;
-  // 機銃・高角砲
-  for (let z = -30; z <= 24; z += 7) for (const s of [-1, 1]) aaMount(g, s * 12.8, D + 9.8, z);
-  for (let z = -44; z <= 56; z += 9) for (const s of [-1, 1]) if (Math.abs(z + 4) > 32 || true) {
-    const t = (z + Y_LEN / 2) / Y_LEN; aaMount(g, s * (Y_BEAM / 2 * hullWidth(t) - 2.5), D + 0.9, z);
-  }
-  for (const s of [-1, 1]) for (const z of [-26, -10, 8]) {
-    const m = new THREE.Group(); m.position.set(s * 13.5, D + 10.2, z); g.add(m);
-    box(4, 2.6, 4.5, MAT.gray, 0, 1.3, 0, m);
-    for (const k of [-0.7, 0.7]) { const b = cyl(0.25, 0.25, 5, MAT.dark, k, 2, -2.4, m, 6); b.rotation.x = Math.PI / 2 - 0.35; }
-  }
-  // 艦尾クレーン
-  const cr = cyl(0.5, 0.8, 9, MAT.dark, 0, D + 4.5, 118, g, 6); cr.rotation.x = -0.6;
-  // 艦首の菊花紋章
-  for (const s of [-1, 1]) {
-    const c = new THREE.Mesh(new THREE.CircleGeometry(1.3, 16), MAT.gold);
-    const z = -126, t = (z + Y_LEN / 2) / Y_LEN;
-    c.position.set(s * (Y_BEAM / 2 * hullWidth(t) + 0.15), 11.5, z); c.rotation.y = s * Math.PI / 2 + s * 0.12; g.add(c);
-  }
+  g.add(new THREE.Mesh(hg, YM.hull), new THREE.Mesh(dg, YM.deck));
+  // 舷側の縁（ブルワーク風の細い帯）
   return g;
 }
+function plateBlock(w, d, h, ch, mat, x, y, z, parent, chBack = ch) {   // 角を面取りした上部構造の段
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2 + ch, -d / 2); s.lineTo(w / 2 - ch, -d / 2); s.lineTo(w / 2, -d / 2 + ch);
+  s.lineTo(w / 2, d / 2 - chBack); s.lineTo(w / 2 - chBack, d / 2); s.lineTo(-w / 2 + chBack, d / 2); s.lineTo(-w / 2, d / 2 - chBack); s.lineTo(-w / 2, -d / 2 + ch);
+  const g = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false }); g.rotateX(Math.PI / 2); g.translate(0, h, 0);
+  const m = new THREE.Mesh(g, mat); m.position.set(x, y, z); if (parent) parent.add(m); return m;
+}
+// 主砲塔（46cm三連装：前面が傾斜した多角形の砲塔）
+function turretY(parent, z, y, rotY, s, nb = 3) {
+  const t = new THREE.Group(); t.position.set(0, y, z); t.rotation.y = rotY; parent.add(t);
+  cyl(7.2 * s, 7.6 * s, 2.2 * s, YM.steel2, 0, 0.6 * s, 0.5 * s, t, 28);
+  const sh = new THREE.Shape(), P = [[-5.2, -8.6], [5.2, -8.6], [7.6, -4.2], [7.6, 6.6], [6.2, 9.4], [-6.2, 9.4], [-7.6, 6.6], [-7.6, -4.2]];
+  sh.moveTo(P[0][0], P[0][1]); for (const p of P.slice(1)) sh.lineTo(p[0], p[1]);
+  const H = 5.4, g = new THREE.ExtrudeGeometry(sh, { depth: H, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.25, bevelSegments: 1 });
+  g.rotateX(Math.PI / 2); g.translate(0, H, 0);
+  const pa = g.attributes.position;
+  for (let i = 0; i < pa.count; i++) {   // 前面上部を後退させて傾斜面に
+    const py = pa.getY(i), pz = pa.getZ(i);
+    if (py > H * 0.6 && pz < -3) pa.setZ(i, pz + (py / H) * 3.6);
+  }
+  g.computeVertexNormals(); g.scale(s, s, s);
+  const house = new THREE.Mesh(g, YM.steel); house.position.y = 1.4 * s; t.add(house);
+  // 測距儀の「耳」
+  const rf = cyl(0.75 * s, 0.75 * s, 19 * s, YM.steel2, 0, (1.4 + H - 0.9) * s, 5.6 * s, t, 10); rf.rotation.z = Math.PI / 2;
+  for (const k of [-1, 1]) cyl(1.15 * s, 1.15 * s, 1.2 * s, YM.dark, k * 9.6 * s, (1.4 + H - 0.9) * s, 5.6 * s, t, 12).rotation.z = Math.PI / 2;
+  box(2 * s, 0.6 * s, 2 * s, YM.dark, -3 * s, (1.4 + H + 0.3) * s, 2 * s, t); box(2 * s, 0.6 * s, 2 * s, YM.dark, 3 * s, (1.4 + H + 0.3) * s, 2 * s, t);
+  const bl = 21 * s * (nb === 3 && s < 0.7 ? 0.95 : 1);
+  for (let k = 0; k < nb; k++) {
+    const xk = (k - (nb - 1) / 2) * 3.8 * s, gg = new THREE.Group(); gg.position.set(xk, 3.4 * s, -7.8 * s); gg.rotation.x = 0.06; t.add(gg);
+    const bag = cyl(1.0 * s, 1.0 * s, 1.6 * s, YM.bag, 0, 0, -0.4 * s, gg, 10); bag.rotation.x = Math.PI / 2;
+    const b = cyl(0.42 * s, 0.68 * s, bl, YM.gun, 0, 0, -bl / 2 - 0.8 * s, gg, 12); b.rotation.x = Math.PI / 2;
+    const mz = cyl(0.55 * s, 0.48 * s, 1.0 * s, YM.gun, 0, 0, -bl - 0.6 * s, gg, 12); mz.rotation.x = Math.PI / 2;
+  }
+  return t;
+}
+function haMount(parent, x, y, z, rotY) {   // 12.7cm連装高角砲（シールド付き）
+  const m = new THREE.Group(); m.position.set(x, y, z); m.rotation.y = rotY; parent.add(m);
+  cyl(1.6, 1.8, 0.8, YM.steel2, 0, 0.4, 0, m, 12);
+  const sh = plateBlock(4.2, 4.6, 2.6, 1.2, YM.steel, 0, 0.8, 0.3, m, 0.4);
+  for (const k of [-0.6, 0.6]) { const b = cyl(0.16, 0.22, 5.2, YM.gun, k, 2.1, -3.2, m, 8); b.rotation.x = Math.PI / 2 - 0.35; }
+  return m;
+}
+function aa25(parent, x, y, z, rotY) {   // 25mm三連装機銃
+  const m = new THREE.Group(); m.position.set(x, y, z); m.rotation.y = rotY; parent.add(m);
+  cyl(0.9, 1.0, 0.6, YM.dark, 0, 0.3, 0, m, 8);
+  box(2.2, 1.2, 0.3, YM.steel2, 0, 1.0, -0.6, m);
+  for (const k of [-0.45, 0, 0.45]) { const b = cyl(0.08, 0.1, 2.6, YM.black, k, 1.1, -1.6, m, 5); b.rotation.x = Math.PI / 2 - 0.55; }
+  return m;
+}
+function searchlight(parent, x, y, z) {
+  cyl(0.9, 0.9, 1.4, YM.dark, x, y, z, parent, 12);
+  const l = new THREE.Mesh(new THREE.CircleGeometry(0.75, 12), YM.light); l.position.set(x, y, z - 0.71); l.rotation.y = Math.PI; parent.add(l);
+}
+function floatPlane(parent, x, y, z, ry) {   // 零式観測機
+  const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; parent.add(p);
+  const f = cyl(0.5, 0.35, 8, YM.plane, 0, 1.6, 0, p, 8); f.rotation.x = Math.PI / 2;
+  box(11, 0.15, 1.6, YM.plane, 0, 2.2, -0.8, p); box(11, 0.15, 1.6, YM.plane, 0, 1.2, -0.8, p);
+  box(3.6, 0.12, 1, YM.plane, 0, 1.7, 3.6, p); box(0.12, 1.4, 1, YM.plane, 0, 2.3, 3.6, p);
+  const fl = cyl(0.4, 0.3, 5, YM.plane, 0, 0.3, -0.6, p, 8); fl.rotation.x = Math.PI / 2;
+  const hino = new THREE.Mesh(new THREE.CircleGeometry(0.5, 12), new THREE.MeshBasicMaterial({ color: 0xb02020 })); hino.rotation.x = -Math.PI / 2; hino.position.set(3.8, 2.3, -0.8); p.add(hino);
+}
+
+const Y_EYE = { y: Y_FB + 44.6, z: -21.2 };   // 防空指揮所（艦長の視点）
+function makeYamato() {
+  const g = new THREE.Group();
+  g.add(makeYamatoHull());
+  const D = Y_FB;
+  // 艦首：菊花紋章・錨・旗竿・波除け
+  const kiku = new THREE.Group(); kiku.position.set(0, 12.6, -L2() + 1.2); kiku.rotation.x = -0.28; g.add(kiku);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1.25, 16), YM.gold); disc.rotation.y = Math.PI; kiku.add(disc);
+  for (let i = 0; i < 16; i++) { const pt = new THREE.Mesh(new THREE.CircleGeometry(0.42, 6), YM.gold); const a = i / 16 * Math.PI * 2; pt.position.set(Math.cos(a) * 1.2, Math.sin(a) * 1.2, 0.01); pt.rotation.y = Math.PI; kiku.add(pt); }
+  for (const s of [-1, 1]) {
+    const lz = -116, t = (lz + Y_LEN / 2) / Y_LEN, hw = yamatoW(t);
+    const an = box(0.6, 3.2, 2.2, YM.black, s * (hw - 0.1), 9.6, lz, g); an.rotation.z = s * 0.15;
+    box(0.4, 0.4, 22, YM.black, s * 2.2, yDeckAt(-108) + 0.2, -108, g);
+  }
+  cyl(0.12, 0.15, 6, YM.dark, 0, yDeckAt(-128) + 3, -129, g, 6);
+  for (const s of [-1, 1]) { const bw = box(0.4, 1.4, 14, YM.steel2, s * 5, yDeckAt(-98) + 0.7, -98, g); bw.rotation.y = s * 0.55; }
+  for (const z of [-112, -104]) cyl(0.9, 1.1, 0.9, YM.dark, 0, yDeckAt(z) + 0.4, z, g, 10);
+  // 主砲・副砲
+  turretY(g, -82, yDeckAt(-82) + 0.6, 0, 1);
+  cyl(7.9, 8.3, 4.6, YM.steel2, 0, yDeckAt(-60) + 2.3, -60, g, 28);
+  turretY(g, -60, yDeckAt(-60) + 4.6, 0, 1);
+  turretY(g, 72, yDeckAt(72) + 0.6, Math.PI, 1);
+  // 上部構造（段々の甲板室）
+  plateBlock(25, 92, 6, 5, YM.steel, 0, D, -2, g, 3);
+  plateBlock(21, 70, 4.5, 4, YM.steel, 0, D + 6, -6, g, 3);
+  plateBlock(15, 46, 4, 3, YM.steel2, 0, D + 10.5, -10, g, 2);
+  cyl(5.6, 5.8, 3.2, YM.steel2, 0, D + 7.6, -40, g, 20);
+  turretY(g, -40, D + 9.2, 0, 0.56);
+  cyl(5.6, 5.8, 2.4, YM.steel2, 0, D + 7.2, 47, g, 20);
+  turretY(g, 47, D + 8.2, Math.PI, 0.56);
+  // 艦橋（塔型艦橋）
+  plateBlock(13, 14, 7.5, 3, YM.steel, 0, D + 14.5, -20, g, 2);
+  cyl(4.2, 5.2, 9, YM.steel, 0, D + 26.5, -19, g, 16);
+  for (const [yy, r] of [[D + 22.2, 8.5], [D + 28.4, 7.2]]) { const pl = cyl(r, r, 0.35, YM.steel2, 0, yy, -19, g, 20); pl.scale.z = 0.8; }
+  plateBlock(14, 10, 3.6, 2.6, YM.steel, 0, D + 31, -20, g, 1.4);
+  plateBlock(14.3, 10.3, 1.0, 2.7, YM.glass, 0, D + 32.6, -20, g, 1.5);
+  plateBlock(21, 5, 0.4, 1.2, YM.steel2, 0, D + 34.6, -21.5, g, 0.6);   // 艦橋ウイング
+  plateBlock(11, 8.5, 3.0, 2.2, YM.steel, 0, D + 35, -19.5, g, 1.2);
+  plateBlock(11.3, 8.8, 0.8, 2.3, YM.glass, 0, D + 36.5, -19.5, g, 1.3);
+  for (const s of [-1, 1]) { const horn = cyl(0.5, 0.9, 2.2, YM.dark, s * 7.2, D + 36, -21, g, 8); horn.rotation.x = Math.PI / 2; }   // 22号電探
+  // 15m測距儀
+  plateBlock(8.5, 7.5, 3.6, 2.4, YM.steel, 0, D + 38, -19.5, g, 1.6);
+  const arm = cyl(0.95, 0.95, 16, YM.steel2, 0, D + 40.2, -18.6, g, 12); arm.rotation.z = Math.PI / 2;
+  for (const s of [-1, 1]) { const e = cyl(1.3, 1.3, 1.2, YM.dark, s * 8.1, D + 40.2, -18.6, g, 12); e.rotation.z = Math.PI / 2; }
+  // 防空指揮所と21号電探
+  const top = plateBlock(9.5, 9, 0.5, 2.6, YM.steel2, 0, D + 41.6, -19.8, g, 2.6);
+  for (const s of [-1, 1]) box(0.05, 0.05, 8, YM.dark, s * 4.7, D + 43.1, -19.8, g);   // 手すり
+  box(9.5, 0.05, 0.05, YM.dark, 0, D + 43.1, -24.3, g);
+  for (const [px, pz] of [[-4.7, -24.3], [4.7, -24.3], [-4.7, -16], [4.7, -16], [0, -24.3]]) box(0.08, 1.0, 0.08, YM.dark, px, D + 42.6, pz, g);
+  box(6.5, 2.0, 0.3, YM.dark, 0, D + 41.2, -15.2, g);   // 21号電探（測距儀の後ろ）
+  for (let i = -3; i <= 3; i++) box(0.08, 2.0, 0.35, YM.steel2, i * 0.9, D + 41.2, -15.35, g);
+  // 煙突（後方へ傾斜）
+  const fun = new THREE.Group(); fun.position.set(0, D + 14.5, 5); fun.rotation.x = 0.42; g.add(fun);
+  const fbase = cyl(1, 1.35, 6, YM.steel, 0, 3, 0, fun, 24); fbase.scale.set(4.6, 1, 7.6);
+  const fc = cyl(0.82, 1, 12, YM.steel, 0, 12, 0, fun, 24); fc.scale.set(4.6, 1, 7.4);
+  const cap = cyl(0.84, 0.82, 1.2, YM.black, 0, 18.6, 0, fun, 24); cap.scale.set(4.6, 1, 7.4);
+  for (let k = -2; k <= 2; k++) box(0.18, 0.25, 11, YM.dark, k * 1.4, 19.2, 0, fun);
+  for (const k of [-1, 1]) cyl(0.35, 0.35, 15, YM.dark, k * 3.6, 11, -6.6, fun, 6);
+  // 探照灯台
+  for (const s of [-1, 1]) {
+    plateBlock(5, 7, 0.4, 1, YM.steel2, s * 9.5, D + 18, 4, g);
+    cyl(0.4, 0.5, 4, YM.dark, s * 9.5, D + 16, 4, g, 6);
+    searchlight(g, s * 9.5, D + 19, 2.5); searchlight(g, s * 9.5, D + 19, 5.5);
+  }
+  // 後檣（三脚檣）
+  const mm = new THREE.Group(); mm.position.set(0, D + 10.5, 24); mm.rotation.x = 0.12; g.add(mm);
+  cyl(0.55, 0.9, 30, YM.dark, 0, 15, 0, mm, 8);
+  for (const s of [-1, 1]) { const leg = cyl(0.35, 0.5, 19, YM.dark, s * 3, 8.6, 3, mm, 6); leg.rotation.z = s * 0.17; leg.rotation.x = -0.15; }
+  box(18, 0.4, 0.4, YM.dark, 0, 22, 0, mm); box(10, 0.3, 0.3, YM.dark, 0, 26.5, 0, mm);
+  box(4, 1.6, 0.25, YM.dark, 0, 19, -0.6, mm);
+  const ens = makeEnsign(); ens.position.set(0, 27.6, 3.4); ens.rotation.y = Math.PI / 2; mm.add(ens); g.userData.ensign = ens;
+  // 12.7cm高角砲・25mm機銃
+  for (const s of [-1, 1]) {
+    for (const z of [-14, 0, 14]) haMount(g, s * 11.6, D + 6, z, s > 0 ? -Math.PI / 2 * 0.6 : Math.PI / 2 * 0.6);
+    for (const z of [-30, -22, 22, 30]) aa25(g, s * 9.5, D + 10.5, z, s * -0.9);
+    for (const z of [-44, -36, -26, -16, -6, 4, 14, 24, 34, 40]) aa25(g, s * 12, D + 6, z, s * -1.2);
+    for (const z of [-50, -42, 50, 58]) aa25(g, s * 15.5, D, z, s * -1.3);
+    for (const z of [88, 96, -100]) aa25(g, s * 13, yDeckAt(z), z, s * -1.2);
+  }
+  for (const z of [-26, -12]) for (const s of [-1, 1]) aa25(g, s * 5.5, D + 14.5, z, s * -1);
+  // 艦載艇
+  for (const s of [-1, 1]) for (const z of [26, 34]) { const b = cyl(1.1, 1.1, 9, YM.steel2, s * 7.5, D + 11.2, z, g, 10); b.rotation.x = Math.PI / 2; b.scale.x = 1.3; }
+  // 艦尾：カタパルト・クレーン・水上機
+  for (const s of [-1, 1]) {
+    const cat = new THREE.Group(); cat.position.set(s * 11, yDeckAt(108) + 0.6, 108); cat.rotation.y = s * 0.5; g.add(cat);
+    box(1.4, 0.8, 19, YM.dark, 0, 0.6, 0, cat); cyl(0.9, 1.1, 1.2, YM.steel2, 0, 0, 3, cat, 10);
+  }
+  floatPlane(g, -11, yDeckAt(108) + 1.6, 106, 0.5);
+  floatPlane(g, 6, yDeckAt(96), 98, 0);
+  const crane = new THREE.Group(); crane.position.set(0, yDeckAt(124), 124); g.add(crane);
+  cyl(0.9, 1.2, 6, YM.dark, 0, 3, 0, crane, 8);
+  const jib = cyl(0.3, 0.45, 16, YM.dark, 0, 9, -5, crane, 6); jib.rotation.x = -0.9;
+  return g;
+}
+function L2() { return Y_LEN / 2; }
 
 function makeEscort(L, B, funnels, cruiser) {
   const g = new THREE.Group();
@@ -718,7 +928,8 @@ const ship = makeYamato();
 ship.rotation.order = 'YXZ';
 scene.add(ship);
 // 視点：艦橋最上部の防空指揮所（史実でも有賀艦長はここで指揮した）
-const head = new THREE.Object3D(); head.position.set(0, Y_FB + 46.5, -16); ship.add(head);
+const head = new THREE.Object3D(); head.position.set(0, Y_EYE.y, Y_EYE.z); ship.add(head);
+ship.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 
 const ESCORT_DEF = [
   { name: '矢矧', L: 174, B: 15.2, f: 1, cr: true, ang: 0 },
@@ -1344,8 +1555,8 @@ function shipEffects(dt) {
     const o = fromLocal(s * 6, 0, 0).sub(G.pos);
     PN.spawn(p.x, p.y, p.z, o.x, 0, o.z, 6, 4, 16, 0.95, 0.97, 1, 0.6);
   }
-  const fp = ship.localToWorld(V3(0, Y_FB + 34, 9));
-  PN.spawn(fp.x + rand(-2, 2), fp.y, fp.z + rand(-2, 2), rand(-1, 1), 7, rand(-1, 1) + 2, 6, 7, 38, 0.24, 0.24, 0.25, 0.5, -0.4, 0.3);
+  const fp = ship.localToWorld(V3(0, Y_FB + 33, 13));
+  PN.spawn(fp.x + rand(-2, 2), fp.y, fp.z + rand(-2, 2), rand(-1, 1), 7, rand(-1, 1) + 4, 6, 6, 34, 0.24, 0.24, 0.25, 0.32, -0.4, 0.3);
   for (let i = emitters.length - 1; i >= 0; i--) {
     const e = emitters[i]; e.t -= dt; if (e.t <= 0) { emitters.splice(i, 1); continue; }
     const p = ship.localToWorld(V3(e.lx, e.ly, e.lz));
@@ -1356,7 +1567,7 @@ function shipEffects(dt) {
 function setDaylight(day) {
   fogColor.copy(FOG_NIGHT).lerp(FOG_DAY, day);
   skyMat.uniforms.uTop.value.setHex(0x0b1018).lerp(new THREE.Color(0x5a636b), day);
-  hemi.intensity = 0.35 + 0.55 * day; sunLight.intensity = 0.15 + 0.4 * day;
+  hemi.intensity = 0.28 + 0.44 * day; sunLight.intensity = 0.12 + 0.5 * day;
   oceanUniforms.uDay.value = day;
   for (const c of cloudLayers) c.m.material.color.setHex(0x232a33).lerp(new THREE.Color(0xb4bcc2), day);
 }
@@ -1512,7 +1723,7 @@ function updateEnding(dt) {
   }
   updateCarriers(dt); updatePlanes(dt); updateOrdnance(dt);
   orbitA += dt * (win ? 0.12 : 0.08);
-  const R = win ? 400 : 380 + endT * 9, H = win ? 95 : 85 + endT * 5;
+  const R = win ? 320 : 360 + endT * 9, H = win ? 55 : 70 + endT * 5;
   camera.position.set(G.pos.x + Math.cos(orbitA) * R, H, G.pos.z + Math.sin(orbitA) * R);
   camera.lookAt(G.pos.x, win ? 20 : 10, G.pos.z);
   G.flash = Math.max(0, G.flash - dt * 0.5);
@@ -1542,8 +1753,8 @@ function updateTitle(dt) {
   titleA += dt * 0.07;
   G.pos.addScaledVector(G.vel.set(0, 0, -12), dt);
   updateShipTransform(dt); updateEscorts(dt); updateCarriers(dt); shipEffects(dt);
-  camera.position.set(G.pos.x + Math.cos(titleA) * 430, 95, G.pos.z + Math.sin(titleA) * 430);
-  camera.lookAt(G.pos.x, 25, G.pos.z);
+  camera.position.set(G.pos.x + Math.cos(titleA) * 290, 38, G.pos.z + Math.sin(titleA) * 290);
+  camera.lookAt(G.pos.x, 20, G.pos.z);
 }
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => {
   diff = +b.dataset.diff; document.querySelectorAll('[data-diff]').forEach(x => x.classList.toggle('sel', x === b));
@@ -1580,6 +1791,7 @@ function frame(now) {
     b.g.children.forEach((m, j) => { m.material.opacity = [0.95, 0.35, 0.12][j] * k; const s = 1 + Math.sin(T * 50) * 0.08 + (1 - k) * 0.6; m.scale.set(s, 1, s); });
     if (b.t > 1.8) { scene.remove(b.g); b.g.children.forEach(m => { m.geometry.dispose(); m.material.dispose(); }); beams.splice(i, 1); }
   }
+  sunLight.position.copy(ship.position).addScaledVector(SUN_DIR, 700); sunLight.target.position.copy(ship.position);
   const cp = camera.getWorldPosition(tmpV);
   const step = OCEAN_SIZE / OCEAN_SEG;
   ocean.position.set(Math.round(cp.x / step) * step, 0, Math.round(cp.z / step) * step);
