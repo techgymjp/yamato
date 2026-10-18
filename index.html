@@ -71,20 +71,35 @@
   .hist{border-left:3px solid var(--gold);padding-left:12px;color:#ddd5bf}
 
   #touch{position:fixed;left:0;right:0;bottom:190px;display:none;justify-content:space-between;padding:0 12px;pointer-events:none}
-  body.playing.touch #touch{display:flex}
   #touch .grp{display:flex;gap:8px;pointer-events:auto}
   #touch button{padding:16px 16px;font-size:15px;background:rgba(0,0,0,.45);touch-action:none}
-  body.touch #keys{display:none}
-  body.touch #touch{bottom:10px}
-  body.touch #touch button{padding:14px 18px}
-  body.touch #bl{transform:scale(.68);transform-origin:left bottom;bottom:66px}
-  body.touch #br{bottom:70px;width:210px}
-  body.touch #radarWrap{transform:translateX(-50%) scale(.6);transform-origin:center bottom;bottom:62px}
-  body.touch #lockHint{display:none!important}
+  /* スマホ：ゲージは上、ボタンは下端の左右に分けて重ならないように */
+  body.touch #keys, body.touch #lockHint{display:none!important}
+  body.playing.touch #touch{display:block;inset:0;bottom:0;padding:0}
+  body.touch #touch .grp{position:absolute;bottom:10px;gap:8px}
+  body.touch #touch .left{left:10px;flex-direction:row}
+  body.touch #touch .right{right:10px;flex-direction:column-reverse;align-items:flex-end}
+  body.touch #touch button{padding:12px 16px;font-size:15px}
+  body.touch #touch .fireBtn{width:88px;height:88px;border-radius:50%;padding:0;font-weight:900;background:rgba(122,31,22,.6);border-color:#c0473a}
+  body.touch #touch button[data-k="auto"]{font-size:12px;padding:8px 10px}
+  body.touch #tl{font-size:12px;line-height:1.35} body.touch #tl .clock{font-size:20px}
+  body.touch #route, body.touch #tl .ends{width:150px}
+  body.touch #bl{top:112px;bottom:auto;left:6px;transform:scale(.52);transform-origin:left top}
+  body.touch #tr{font-size:12px} body.touch #tr .kills{font-size:26px}
+  body.touch #br{top:96px;bottom:auto;right:8px;width:175px}
+  body.touch #beamBox{padding:5px 8px} body.touch #beamBox .lbl{font-size:12px} body.touch #beamHint{font-size:11px}
+  body.touch #beamBox.ready #beamHint{font-size:12px}
+  body.touch #radarWrap{display:block!important;bottom:6px;transform:translateX(-50%) scale(.55);transform-origin:center bottom}
+  body.touch #log{top:auto;bottom:108px;width:min(480px,60vw);font-size:13px}
+  body.touch #alert{font-size:26px}
+  @media (orientation:portrait){
+    body.touch #radarWrap{left:6px;bottom:70px;transform:scale(.55);transform-origin:left bottom}
+    body.touch #log{bottom:auto;top:230px;width:90vw}
+  }
   @media (max-width:720px){
     #bl{width:210px} #br{width:180px} #tr{font-size:12px} #tr .kills{font-size:28px}
     #tl .clock{font-size:20px} #route,#tl .ends{width:160px}
-    #radarWrap{display:none!important} #keys{display:none} #log{top:96px;width:90vw}
+    #keys{display:none} #log{top:96px;width:90vw}
   }
 </style>
 </head>
@@ -104,7 +119,7 @@
   <div>敵機撃墜</div>
   <div class="kills" id="killTxt">0</div>
   <div>敵空母撃沈 <b id="carTxt">0</b> / 6</div>
-  <div>被雷 <span id="torpTxt">0</span>　被弾 <span id="bombTxt">0</span></div>
+  <div>被雷 <span id="torpTxt">0</span>　体当たり <span id="crashTxt">0</span>　被弾 <span id="bombTxt">0</span></div>
 </div>
 <div id="log" class="hud"></div>
 <div id="alert" class="hud"></div>
@@ -128,8 +143,8 @@
 <div id="radarWrap" class="hud"><canvas id="radar" width="170" height="170"></canvas></div>
 
 <div id="touch">
-  <div class="grp"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
-  <div class="grp"><button data-k="auto">自動射撃 OFF</button><button data-k="fire">ミサイル</button><button data-k="beam">波動砲</button></div>
+  <div class="grp left"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
+  <div class="grp right"><button data-k="fire" class="fireBtn">ミサイル</button><button data-k="beam">波動砲</button><button data-k="auto">自動射撃 OFF</button></div>
 </div>
 
 <div id="title" class="panel">
@@ -988,7 +1003,7 @@ function newGame() {
     elapsed: 0, clock: 12 * 60 + 20, dist: TOTAL_NM, heading: 0, turnRate: 0, speed: 24, pos: V3(), vel: V3(),
     list: 0, listT: 0, energy: 40,
     fireCool: 0, side: 0, spawnT: 6, mgSnd: 0, pingT: 0,
-    kills: 0, aaKills: 0, csunk: 0, torpHits: 0, bombHits: 0, maxList: 0, dodged: 0, torpHint: false, lastHit: -99,
+    kills: 0, aaKills: 0, csunk: 0, torpHits: 0, bombHits: 0, maxList: 0, dodged: 0, torpHint: false, lastHit: -99, crashHits: 0,
     yaw: 0, pitch: -0.05, shake: 0, flash: 0, alertT: 0, histDone: {},
     endCause: '', endClock: 0,
   };
@@ -1061,6 +1076,11 @@ function intercept(from, spd) {
 function killPlane(pl, byAA) {
   if (pl.state === 'falling') return;
   pl.state = 'falling'; pl.t = 0;
+  // 近くで被弾した機体は、炎上しながら大和へ突っ込んでくることがある
+  const toShip = tmpV2.copy(G.pos).sub(pl.pos).setY(0);
+  pl.ram = toShip.length() < 600 && toShip.normalize().dot(tmpV.copy(pl.vel).setY(0).normalize()) > 0.5 && Math.random() < 0.07;
+  pl.ramLZ = rand(-100, 80);
+  if (!pl.ram) { pl.vel.multiplyScalar(0.55); pl.vel.x += rand(-35, 35); pl.vel.z += rand(-35, 35); }   // 被弾機はきりもみで失速
   explosion(pl.pos, 1.3);
   AU.boom(pl.pos.distanceTo(camera.position) * 0.6, 0.45);
   if (byAA) G.aaKills++; else { G.kills++; G.energy = Math.min(100, G.energy + 1.2); }
@@ -1077,6 +1097,17 @@ function enemyMG(pl, aimP) {
   PA.spawn(from.x, from.y, from.z, v.x, v.y, v.z, tt, 2.8, 2.8, 1, 0.42, 0.2, 1);
   impacts.push({ t: T + tt, p: tgt });
 }
+// 敵機が艦体・艦橋に激突したか
+function planeHitsShip(pl, i) {
+  const p = pl.pos, lc = toLocal(p), hw = yHalfW(lc.z);
+  if (hw <= 0 || Math.abs(lc.x) > hw + 3) return false;
+  const top = Math.abs(lc.z + 10) < 45 ? Y_FB + (Math.abs(lc.z + 19) < 8 && Math.abs(lc.x) < 6 ? 43 : 16) : yDeckAt(lc.z) + 4;
+  if (p.y > top) return false;
+  hitShip({ x: lc.x, y: Math.min(p.y, top), z: lc.z }, 'crash');
+  if (pl.state !== 'falling') G.kills++;
+  scene.remove(pl.mesh); planes.splice(i, 1);
+  return true;
+}
 function updatePlanes(dt) {
   const shipC = G.pos;
   for (let i = planes.length - 1; i >= 0; i--) {
@@ -1084,8 +1115,13 @@ function updatePlanes(dt) {
     const p = pl.pos, hd = Math.hypot(p.x - shipC.x, p.z - shipC.z);
     let desired = null, rate = 0.9;
     if (pl.state === 'falling') {
-      pl.vel.y -= 25 * dt; pl.vel.multiplyScalar(1 - 0.15 * dt);
+      if (pl.ram) {
+        const tgt = fromLocal(-Math.max(yHalfW(pl.ramLZ), 5) * 0.6, 10, pl.ramLZ);
+        const want = tgt.sub(p).normalize().multiplyScalar(Math.max(90, pl.vel.length()));
+        pl.vel.lerp(want, Math.min(1, dt * 1.2));
+      } else { pl.vel.y -= 25 * dt; pl.vel.multiplyScalar(1 - 0.15 * dt); }
       p.addScaledVector(pl.vel, dt);
+      if (planeHitsShip(pl, i)) continue;
       PA.spawn(p.x, p.y, p.z, 0, 0, 0, 0.45, 4, 9, 1, 0.5, 0.15, 0.9);
       PN.spawn(p.x, p.y, p.z, rand(-1, 1), 2, rand(-1, 1), 3, 5, 16, 0.12, 0.12, 0.12, 0.7);
       pl.mesh.rotateZ(dt * 3); pl.mesh.position.copy(p);
@@ -1115,7 +1151,7 @@ function updatePlanes(dt) {
       if (pl.state === 'approach') {
         const lead = tmpV2.copy(G.vel).multiplyScalar(5).add(shipC);
         desired = altDesired(lead.clone().sub(p), p, 1000);
-        if (hd < 520) { pl.state = 'dive'; pl.t = 0; }
+        if (hd < 520) { pl.state = 'dive'; pl.t = 0; if (!G.diveHint) { G.diveHint = true; msg('ヒント：急降下爆撃機（オレンジ）は降下前に撃て。真上で落とすと残骸が突っ込んでくる', 'hist'); } }
       } else if (pl.state === 'dive') {
         pl.speed = Math.min(150, pl.speed + 30 * dt);
         const tt = Math.max(1.5, p.distanceTo(shipC) / 160);
@@ -1164,6 +1200,9 @@ function updatePlanes(dt) {
     if (desired) steer(pl, desired, rate, dt);
     p.addScaledVector(pl.vel, dt);
     if (p.y < 8) { p.y = 8; pl.vel.y = Math.max(0, pl.vel.y); }
+    // 無傷の敵機は艦橋・上部構造を避けて飛ぶ
+    if (hd < 180 && p.y < 62) { p.y = lerp(p.y, 62, Math.min(1, dt * 3)); pl.vel.y = Math.max(pl.vel.y, 10); }
+    if (hd < 160 && planeHitsShip(pl, i)) continue;
     pl.mesh.position.copy(p);
     pl.mesh.lookAt(tmpV2.copy(p).add(pl.vel));
     pl.mesh.rotateZ(-pl.bank);
@@ -1187,6 +1226,11 @@ function hitShip(local, kind) {
     G.shake = 1.3; AU.boom(0, 1.6);
     alertMsg(port ? '左舷 魚雷命中！ 傾斜増大' : '右舷 魚雷命中！');
     emitters.push({ lx: local.x * 0.9, ly: 3, lz: local.z, t: 40, fire: false });
+  } else if (kind === 'crash') {
+    G.crashHits++; addList(local, 3.5);
+    explosion(hp, 2.6); G.shake = 1.5; AU.boom(0, 1.8);
+    alertMsg(port ? '左舷に敵機 体当たり！' : '右舷に敵機 体当たり！');
+    emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 60, fire: true });
   } else if (kind === 'bomb') {
     G.bombHits++; addList(local, 1.2);
     explosion(hp, 2); G.shake = 1.0; AU.boom(0, 1.2);
@@ -1627,7 +1671,7 @@ function updateHUD() {
   $('routeFill').style.width = (100 * progress()) + '%';
   $('killTxt').textContent = G.kills + G.aaKills;
   $('carTxt').textContent = G.csunk;
-  $('torpTxt').textContent = G.torpHits; $('bombTxt').textContent = G.bombHits;
+  $('torpTxt').textContent = G.torpHits; $('bombTxt').textContent = G.bombHits; $('crashTxt').textContent = G.crashHits;
   const rem = Math.max(0, MAX_LIST - G.list);
   const lt = $('listTxt'); lt.textContent = `横転まで あと ${rem.toFixed(1)}°`; lt.style.color = rem < 10 ? '#ff6a55' : '#e9e3d2';
   $('enTxt').textContent = G.energy >= 100 ? '120%' : G.energy.toFixed(0) + '%';
@@ -1782,7 +1826,7 @@ function showResult() {
   $('resTitle').style.color = win ? '#e9d48a' : '#e9e3d2';
   $('resSub').textContent = `昭和20年4月${7 + c.d}日 ${c.s}　${win ? '天一号作戦 成功' : '左舷への被害で傾斜30°に達し、左へ横転'}`;
   const m = Math.floor(G.elapsed / 60), s = Math.floor(G.elapsed % 60);
-  const st = [['敵機撃墜', G.kills + G.aaKills], ['敵空母撃沈', `${G.csunk} / 6`], ['被雷', `${G.torpHits} 本`], ['魚雷回避', `${G.dodged} 本`], ['被弾', `${G.bombHits} 発`],
+  const st = [['敵機撃墜', G.kills + G.aaKills], ['敵空母撃沈', `${G.csunk} / 6`], ['被雷', `${G.torpHits} 本`], ['体当たり', `${G.crashHits} 機`], ['魚雷回避', `${G.dodged} 本`], ['被弾', `${G.bombHits} 発`],
     ['耐えた時間', `${m}分${String(s).padStart(2, '0')}秒`], ['残り航程', `${G.dist.toFixed(1)} 浬`]];
   $('resStats').innerHTML = st.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('');
   $('resHist').textContent = win
