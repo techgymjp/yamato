@@ -74,6 +74,13 @@
   body.playing.touch #touch{display:flex}
   #touch .grp{display:flex;gap:8px;pointer-events:auto}
   #touch button{padding:16px 16px;font-size:15px;background:rgba(0,0,0,.45);touch-action:none}
+  body.touch #keys{display:none}
+  body.touch #touch{bottom:10px}
+  body.touch #touch button{padding:14px 18px}
+  body.touch #bl{transform:scale(.68);transform-origin:left bottom;bottom:66px}
+  body.touch #br{bottom:70px;width:210px}
+  body.touch #radarWrap{transform:translateX(-50%) scale(.6);transform-origin:center bottom;bottom:62px}
+  body.touch #lockHint{display:none!important}
   @media (max-width:720px){
     #bl{width:210px} #br{width:180px} #tr{font-size:12px} #tr .kills{font-size:28px}
     #tl .clock{font-size:20px} #route,#tl .ends{width:160px}
@@ -122,7 +129,7 @@
 
 <div id="touch">
   <div class="grp"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
-  <div class="grp"><button data-k="fire">ミサイル</button><button data-k="beam">波動砲</button></div>
+  <div class="grp"><button data-k="auto">自動射撃 OFF</button><button data-k="fire">ミサイル</button><button data-k="beam">波動砲</button></div>
 </div>
 
 <div id="title" class="panel">
@@ -139,6 +146,7 @@
       <span>右クリック／<span class="key">Space</span></span><span>波動砲（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
       <span><span class="key">A</span><span class="key">D</span></span><span>転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
       <span><span class="key">M</span></span><span>BGM オン／オフ</span>
+      <span>スマホ</span><span>画面をドラッグで照準。「ミサイル」ボタン長押しと同時に操作できる。「自動射撃 ON」なら照準を動かすだけで連射</span>
     </div>
     <div class="btns">
       <span style="font-size:14px;color:var(--dim)">難易度</span>
@@ -1375,23 +1383,36 @@ cv.addEventListener('mousedown', e => {
 });
 addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
 addEventListener('contextmenu', e => e.preventDefault());
-// タッチ：ドラッグで見回し
-let lastTouch = null;
-cv.addEventListener('touchstart', e => { const t = e.touches[0]; lastTouch = [t.clientX, t.clientY]; AU.init(); e.preventDefault(); }, { passive: false });
-cv.addEventListener('touchmove', e => {
-  const t = e.touches[0];
-  if (lastTouch && G && state === 'play') {
-    G.yaw = clamp(G.yaw - (t.clientX - lastTouch[0]) * 0.005, -175 * DEG, 175 * DEG);
-    G.pitch = clamp(G.pitch - (t.clientY - lastTouch[1]) * 0.005, -0.5, 1.35);
-  }
-  lastTouch = [t.clientX, t.clientY]; e.preventDefault();
+// タッチ：画面ドラッグで照準（指ごとに追跡するので、射撃ボタンと同時に使える）
+let lookId = null, lastTouch = null, autoFire = false;
+cv.addEventListener('touchstart', e => {
+  AU.init(); e.preventDefault();
+  if (lookId !== null) return;
+  const t = e.changedTouches[0]; lookId = t.identifier; lastTouch = [t.clientX, t.clientY];
 }, { passive: false });
+cv.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== lookId) continue;
+    if (G && state === 'play') {
+      G.yaw = clamp(G.yaw - (t.clientX - lastTouch[0]) * 0.005, -175 * DEG, 175 * DEG);
+      G.pitch = clamp(G.pitch - (t.clientY - lastTouch[1]) * 0.005, -0.5, 1.35);
+    }
+    lastTouch = [t.clientX, t.clientY];
+  }
+}, { passive: false });
+const endLook = e => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; };
+cv.addEventListener('touchend', endLook); cv.addEventListener('touchcancel', endLook);
 if (matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('#touch button').forEach(b => {
   const k = b.dataset.k;
-  const on = e => { e.preventDefault(); touchHold[k] = true; AU.init(); if (k === 'beam') tryBeam(); };
+  const on = e => {
+    e.preventDefault(); AU.init();
+    if (k === 'auto') { autoFire = !autoFire; b.textContent = autoFire ? '自動射撃 ON' : '自動射撃 OFF'; b.classList.toggle('sel', autoFire); return; }
+    touchHold[k] = true; if (k === 'beam') tryBeam();
+  };
   const off = e => { e.preventDefault(); touchHold[k] = false; };
-  b.addEventListener('touchstart', on, { passive: false }); b.addEventListener('touchend', off, { passive: false });
+  b.addEventListener('touchstart', on, { passive: false }); b.addEventListener('touchend', off, { passive: false }); b.addEventListener('touchcancel', off, { passive: false });
   b.addEventListener('mousedown', on); b.addEventListener('mouseup', off); b.addEventListener('mouseleave', off);
 });
 const raycaster = new THREE.Raycaster();
@@ -1464,7 +1485,7 @@ function updatePlay(dt) {
 
   // ミサイル連射
   G.fireCool -= dt;
-  if ((mouse.down || touchHold.fire) && G.fireCool <= 0) { G.fireCool = 0.075; fireMissile(aimDir()); }
+  if ((mouse.down || touchHold.fire || autoFire) && G.fireCool <= 0) { G.fireCool = 0.075; fireMissile(aimDir()); }
   G.energy = Math.min(100, G.energy + dt * 100 / 22);
 
   updateShipTransform(dt);
@@ -1704,7 +1725,7 @@ function endGame(cause) {
   if (cause !== 'win') { AU.alarm(); BGM.fade(0.12, 2); } else BGM.fade(0.45, 1);
   if (AU.ctx) AU.droneGain.gain.value = 0;
   for (const pl of planes) if (pl.state !== 'falling') pl.state = 'egress';
-  mouse.down = false;
+  mouse.down = false; for (const k in touchHold) touchHold[k] = false;
 }
 function updateEnding(dt) {
   endT += dt;
