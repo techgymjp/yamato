@@ -146,7 +146,7 @@
       <span>右クリック／<span class="key">Space</span></span><span>波動砲（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
       <span><span class="key">A</span><span class="key">D</span></span><span>転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
       <span><span class="key">M</span></span><span>BGM オン／オフ</span>
-      <span>スマホ</span><span>画面をドラッグで照準。「ミサイル」ボタン長押しと同時に操作できる。「自動射撃 ON」なら照準を動かすだけで連射</span>
+      <span>スマホ</span><span>画面をドラッグで照準。「ミサイル」ボタンを押したまま指をずらしても照準が動く。「自動射撃 ON」なら照準を動かすだけで連射</span>
     </div>
     <div class="btns">
       <span style="font-size:14px;color:var(--dim)">難易度</span>
@@ -1383,37 +1383,50 @@ cv.addEventListener('mousedown', e => {
 });
 addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
 addEventListener('contextmenu', e => e.preventDefault());
-// タッチ：画面ドラッグで照準（指ごとに追跡するので、射撃ボタンと同時に使える）
-let lookId = null, lastTouch = null, autoFire = false;
-cv.addEventListener('touchstart', e => {
-  AU.init(); e.preventDefault();
-  if (lookId !== null) return;
-  const t = e.changedTouches[0]; lookId = t.identifier; lastTouch = [t.clientX, t.clientY];
-}, { passive: false });
-cv.addEventListener('touchmove', e => {
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (t.identifier !== lookId) continue;
-    if (G && state === 'play') {
-      G.yaw = clamp(G.yaw - (t.clientX - lastTouch[0]) * 0.005, -175 * DEG, 175 * DEG);
-      G.pitch = clamp(G.pitch - (t.clientY - lastTouch[1]) * 0.005, -0.5, 1.35);
-    }
-    lastTouch = [t.clientX, t.clientY];
-  }
-}, { passive: false });
-const endLook = e => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; };
-cv.addEventListener('touchend', endLook); cv.addEventListener('touchcancel', endLook);
-if (matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
-document.querySelectorAll('#touch button').forEach(b => {
+// タッチ操作：Pointer Events で指を1本ずつ追跡する
+//  ・画面をドラッグ → 照準
+//  ・ボタン長押し → 射撃／転舵（他の指と同時に使える）
+//  ・ミサイルボタンを押したまま指をずらす → そのまま照準も動く
+let autoFire = false;
+const ptrs = new Map();
+function lookBy(dx, dy, k = 0.005) {
+  if (!G || state !== 'play') return;
+  G.yaw = clamp(G.yaw - dx * k, -175 * DEG, 175 * DEG);
+  G.pitch = clamp(G.pitch - dy * k, -0.5, 1.35);
+}
+function pressBtn(b) {
   const k = b.dataset.k;
-  const on = e => {
-    e.preventDefault(); AU.init();
-    if (k === 'auto') { autoFire = !autoFire; b.textContent = autoFire ? '自動射撃 ON' : '自動射撃 OFF'; b.classList.toggle('sel', autoFire); return; }
-    touchHold[k] = true; if (k === 'beam') tryBeam();
-  };
-  const off = e => { e.preventDefault(); touchHold[k] = false; };
-  b.addEventListener('touchstart', on, { passive: false }); b.addEventListener('touchend', off, { passive: false }); b.addEventListener('touchcancel', off, { passive: false });
-  b.addEventListener('mousedown', on); b.addEventListener('mouseup', off); b.addEventListener('mouseleave', off);
+  if (k === 'auto') { autoFire = !autoFire; b.textContent = autoFire ? '自動射撃 ON' : '自動射撃 OFF'; b.classList.toggle('sel', autoFire); return; }
+  touchHold[k] = true; if (k === 'beam') tryBeam();
+}
+addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse') return;
+  AU.init();
+  const btn = e.target.closest ? e.target.closest('#touch button') : null;
+  if (btn) { e.preventDefault(); ptrs.set(e.pointerId, { btn, x: e.clientX, y: e.clientY }); pressBtn(btn); return; }
+  if (e.target === cv) ptrs.set(e.pointerId, { look: true, x: e.clientX, y: e.clientY });
+}, { passive: false });
+addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  if (p.look || (p.btn && p.btn.dataset.k === 'fire')) lookBy(e.clientX - p.x, e.clientY - p.y, p.look ? 0.005 : 0.004);
+  p.x = e.clientX; p.y = e.clientY;
+});
+const ptrEnd = e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  if (p.btn) touchHold[p.btn.dataset.k] = false;
+  ptrs.delete(e.pointerId);
+};
+addEventListener('pointerup', ptrEnd); addEventListener('pointercancel', ptrEnd);
+// スクロール・ズーム・疑似マウスイベントを止める
+for (const el of [cv, $('touch')]) {
+  el.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  el.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+}
+if (matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
+document.querySelectorAll('#touch button').forEach(b => {   // マウスでボタンを押した場合
+  b.addEventListener('mousedown', () => { AU.init(); pressBtn(b); });
+  const off = () => { if (b.dataset.k !== 'auto') touchHold[b.dataset.k] = false; };
+  b.addEventListener('mouseup', off); b.addEventListener('mouseleave', off);
 });
 const raycaster = new THREE.Raycaster();
 function aimDir() {
