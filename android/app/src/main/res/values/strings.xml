@@ -4,6 +4,6 @@
     <string name="title_activity_main">Battleship Yamato: Operation Ten-Go</string>
     <string name="package_name">jp.techgym.yamato</string>
     <string name="custom_url_scheme">jp.techgym.yamato</string>
-    <!-- AdMob のアプリ ID。いまは Google 公式のサンプル ID。AdMob で「戦艦大和 天一号作戦」を追加したら、その ID（ca-app-pub-6411535997477460~…）に差し替える -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- AdMob のアプリ ID（戦艦大和 天一号作戦） -->
+    <string name="admob_app_id">ca-app-pub-6411535997477460~9305967696</string>
 </resources>

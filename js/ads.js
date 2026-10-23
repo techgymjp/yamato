@@ -3,13 +3,15 @@ const Ads = (() => {
   const UNITS = {
     // Google 公式のテスト用広告ユニット
     test: {
+      banner: 'ca-app-pub-3940256099942544/6300978111',
       interstitial: 'ca-app-pub-3940256099942544/1033173712',
       rewarded: 'ca-app-pub-3940256099942544/5224354917',
     },
-    // 本番の広告ユニット（AdMob で「戦艦大和 天一号作戦」用に作成した ID に差し替える）
-    // 空のままだと Google Play 版では広告を出さない
+    // 本番の広告ユニット（AdMob の「戦艦大和 天一号作戦」用）
+    // 空のままの種類は、Google Play 版では出さない
     production: {
-      interstitial: '',
+      banner: 'ca-app-pub-6411535997477460/7501309310',
+      interstitial: 'ca-app-pub-6411535997477460/8622819293',
       rewarded: '',
     },
   };
@@ -18,7 +20,7 @@ const Ads = (() => {
   const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
   const testing = window.AD_MODE !== 'production';
   const ids = testing ? UNITS.test : UNITS.production;
-  const AdMob = native && cap.Plugins && ids.interstitial && ids.rewarded ? cap.Plugins.AdMob : null;
+  const AdMob = native && cap.Plugins && (ids.banner || ids.interstitial || ids.rewarded) ? cap.Plugins.AdMob : null;
 
   let ready = false;           // 広告をリクエストしてよい状態（初期化と同意確認が済んだ）
   let showing = false;
@@ -82,13 +84,47 @@ const Ads = (() => {
     AdMob.addListener('onRewardedVideoAdReward', () => { rewarded = true; });
     AdMob.addListener('onRewardedVideoAdDismissed', () => finish('reward', rewarded));
     AdMob.addListener('onRewardedVideoAdFailedToShow', () => finish('reward', false));
-    prepare('inter');
-    prepare('reward');
+    // バナーの高さぶん、画面の内容を上にずらす（バナーで隠さない）
+    AdMob.addListener('bannerAdSizeChanged', size => {
+      document.documentElement.style.setProperty('--banner-h', `${(size && size.height) || 0}px`);
+    });
+    AdMob.addListener('bannerAdFailedToLoad', () => {
+      bannerCreated = bannerShown = false;
+      document.documentElement.style.setProperty('--banner-h', '0px');
+      AdMob.removeBanner().catch(() => {});
+      setTimeout(() => { if (bannerWanted) setBanner(true); }, RETRY_MS);
+    });
+    if (ids.interstitial) prepare('inter');
+    if (ids.rewarded) prepare('reward');
+  }
+
+  // バナー（画面下）。タイトル・結果・一時停止の画面でだけ出し、プレイ中は隠す
+  let bannerWanted = false, bannerShown = false, bannerCreated = false, bannerChain = Promise.resolve();
+  function setBanner(on) {
+    bannerWanted = on;
+    bannerChain = bannerChain.then(async () => {
+      await initDone;
+      if (!AdMob || !ready || !ids.banner) return;
+      const want = bannerWanted;
+      if (want === bannerShown) return;
+      try {
+        if (want && !bannerCreated) {
+          await AdMob.showBanner({ adId: ids.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: testing });
+          bannerCreated = true;
+        } else if (want) await AdMob.resumeBanner();
+        else await AdMob.hideBanner();
+        bannerShown = want;
+        if (!want) document.documentElement.style.setProperty('--banner-h', '0px');
+      } catch (e) {
+        if (want) setTimeout(() => { if (bannerWanted) setBanner(true); }, RETRY_MS);
+      }
+    });
+    return bannerChain;
   }
 
   // 全画面広告を表示し、閉じられたら resolve する（読み込めていないときは出さずにすぐ resolve）
   function showInterstitial() {
-    if (!AdMob || !ready || !slots.inter.loaded || showing) return Promise.resolve();
+    if (!AdMob || !ids.interstitial || !ready || !slots.inter.loaded || showing) return Promise.resolve();
     showing = true; slots.inter.loaded = false;
     GameAudio.suspend();
     return new Promise(resolve => {
@@ -99,7 +135,7 @@ const Ads = (() => {
 
   // リワード広告を表示する。結果は 'rewarded'（最後まで見た）/ 'skipped'（途中で閉じた）/ 'unavailable'（読み込めなかった）
   async function showRewarded() {
-    if (!AdMob || showing) return 'unavailable';
+    if (!AdMob || !ids.rewarded || showing) return 'unavailable';
     await initDone;
     if (!ready || !(await ensureLoaded('reward', 8000))) return 'unavailable';
     showing = true; slots.reward.loaded = false;
@@ -119,12 +155,14 @@ const Ads = (() => {
   const initDone = AdMob ? init() : Promise.resolve();
 
   return {
-    get available() { return !!AdMob; },
+    get available() { return !!(AdMob && ids.rewarded); },   // リワードで続行できるか
+    get interstitialAvailable() { return !!(AdMob && ids.interstitial); },
     get showing() { return showing; },
     get privacyOptionsRequired() { return privacyRequired; },
     initDone,
     showInterstitial,
     showRewarded,
     showPrivacyOptions,
+    setBanner,
   };
 })();

@@ -46,8 +46,8 @@
   #radarWrap{left:50%;bottom:12px;transform:translateX(-50%)}
   #lockHint{left:50%;top:58%;transform:translateX(-50%);font-size:15px;color:#fff;background:rgba(0,0,0,.45);padding:6px 14px;border:1px solid var(--line)}
   .key{display:inline-block;border:1px solid var(--line);padding:0 5px;border-radius:3px;font-size:12px;margin:0 2px;background:rgba(255,255,255,.06)}
-  .panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;pointer-events:none}
-  .panel .box{pointer-events:auto;max-width:820px;width:100%;max-height:96vh;overflow:auto;background:var(--panel);
+  .panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:calc(16px + var(--banner-h, 0px));pointer-events:none}
+  .panel .box{pointer-events:auto;max-width:820px;width:100%;max-height:calc(96vh - var(--banner-h, 0px));overflow:auto;background:var(--panel);
     border:1px solid var(--line);padding:22px 28px;backdrop-filter:blur(3px)}
   .title{font-size:clamp(34px,6vw,60px);font-weight:900;letter-spacing:.12em;line-height:1.1;margin:0}
   .title small{display:block;font-size:.4em;letter-spacing:.5em;color:var(--gold);margin-bottom:8px}
@@ -1901,6 +1901,7 @@ function updateEnding(dt) {
 }
 function showResult() {
   const r = $('result'); r.dataset.shown = '1'; r.style.display = 'flex';
+  Ads.setBanner(true);
   const win = G.endCause === 'win', c = fmtClock(G.endClock);
   $('resTitle').textContent = t(win ? 'res.win' : 'res.sunk');
   $('resTitle').style.color = win ? '#e9d48a' : '#e9e3d2';
@@ -1936,6 +1937,7 @@ function startGame() {
   camera.position.set(0, 0, 0); camera.rotation.set(G.pitch, 0, 0);
   G.yaw = 35 * DEG;   // 左舷寄りを向いて開始
   state = 'play'; document.body.classList.add('playing');
+  Ads.setBanner(false);
   setDaylight(1);
   msg(t('msg.start'), 'hist');
 }
@@ -1973,7 +1975,7 @@ $('againBtn').addEventListener('click', async () => {
   if (retryBusy) return;
   AU.init();
   gameOvers++;
-  if (Ads.available && gameOvers % 2 === 0) { retryBusy = true; await Ads.showInterstitial(); retryBusy = false; }
+  if (Ads.interstitialAvailable && gameOvers % 2 === 0) { retryBusy = true; await Ads.showInterstitial(); retryBusy = false; }
   startGame();
 });
 
@@ -1984,6 +1986,7 @@ function setPaused(on) {
   if (state !== 'play' || !G) return;
   G.paused = on;
   $('pause').style.display = on ? 'flex' : 'none';
+  Ads.setBanner(on);
   document.body.classList.toggle('playing', !on);
   if (on) { mouse.down = false; for (const k in touchHold) touchHold[k] = false; if (locked()) document.exitPointerLock(); if (AU.ctx) AU.droneGain.gain.value = 0; }
 }
@@ -1994,6 +1997,7 @@ function toTitle() {
   $('result').style.display = 'none'; $('continue').style.display = 'none'; $('pause').style.display = 'none'; delete $('result').dataset.shown;
   if (camera.parent) camera.parent.remove(camera); scene.add(camera);
   newGame(); $('title').style.display = 'flex';
+  Ads.setBanner(true);
 }
 addEventListener('keydown', e => { if ((e.code === 'KeyP' || e.code === 'Escape') && state === 'play' && !locked()) setPaused(!G.paused); });
 // アプリが裏に回ったら一時停止して音を止める
@@ -2018,6 +2022,7 @@ if (window.APP_VERSION && window.APP_VERSION !== 'dev') $('buildInfo').textConte
 // EU など同意が必要な地域では、タイトル画面から広告の同意内容を変更できるようにする
 Ads.initDone.then(() => { if (Ads.privacyOptionsRequired) $('adPrivacy').style.display = ''; });
 $('adPrivacyLink').addEventListener('click', e => { e.preventDefault(); Ads.showPrivacyOptions(); });
+Ads.setBanner(true);   // タイトル画面
 
 // ------------------------------------------------------------
 //  リワード広告で応急修理（傾斜 30° に達したとき、1 出撃 1 回）
@@ -2060,7 +2065,10 @@ $('contWatch').addEventListener('click', async () => {
   state = 'play'; document.body.classList.add('playing');
   msg(t('msg.repaired'), 'good'); alertMsg(t('alert.repaired'));
 });
-$('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') $('result').style.display = 'flex'; }, 15000); });
+$('viewBtn').addEventListener('click', () => {
+  viewOnly = true; $('result').style.display = 'none'; Ads.setBanner(false);
+  setTimeout(() => { if (state === 'ending') { $('result').style.display = 'flex'; Ads.setBanner(true); } }, 15000);
+});
 
 // ============================================================
 //  メインループ
