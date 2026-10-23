@@ -1969,13 +1969,12 @@ document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click
   }
 }));
 $('startBtn').addEventListener('click', startGame);
-// 2 回に 1 回、「再び出撃」の前に全画面広告を出す（Android アプリのみ）
-let retryBusy = false, gameOvers = 0;
+// 「再び出撃」の前に毎回、全画面広告を出す（Android アプリのみ）
+let retryBusy = false;
 $('againBtn').addEventListener('click', async () => {
   if (retryBusy) return;
   AU.init();
-  gameOvers++;
-  if (Ads.interstitialAvailable && gameOvers % 2 === 0) { retryBusy = true; await Ads.showInterstitial(); retryBusy = false; }
+  if (Ads.interstitialAvailable) { retryBusy = true; await Ads.showInterstitial(); retryBusy = false; }
   startGame();
 });
 
