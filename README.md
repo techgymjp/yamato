@@ -4,6 +4,11 @@
 
 `index.html` をブラウザで開くだけで遊べます（Three.js は `js/vendor/` に同梱）。
 
+## 表示言語（日本語 / 英語）
+
+端末（ブラウザ）の言語が日本語なら日本語、それ以外は英語で表示します。タイトル画面の「日本語 / English」で切り替えられ、選んだ言語は次回も使われます。
+文言は `js/i18n.js` にまとめています。Android のアプリ名も端末の言語に合わせて切り替わります（日本語「戦艦大和 天一号作戦」/ 英語「Yamato: Ten-Go」）。
+
 ## ルール
 - 敵機の攻撃に約5分間耐え抜けば **沖縄到達（勝利）**
 - 左舷に魚雷・爆弾を受けると左へ傾く。**傾斜30°で横転・沈没（敗北）**
@@ -106,6 +111,7 @@ All rights reserved. 著作権はテックジム株式会社に帰属します�
 ```
 index.html               ゲーム本体（画面構成・3D モデル・ゲームロジック・BGM）
 js/vendor/three.min.js   Three.js r128（MIT License）
+js/i18n.js               表示言語（日本語 / 英語）の文言
 js/ads.js                Google AdMob 広告（Android アプリのみ）
 js/ads-config.js         広告のモード（test / production）
 js/build-info.js         タイトル画面に出すバージョン

@@ -88,7 +88,7 @@ def splash(size, dark=False):
     d = ImageDraw.Draw(img)
     f1 = ImageFont.truetype(FONT, round(size * 0.042))
     f2 = ImageFont.truetype(FONT, round(size * 0.018))
-    for text, f, y, col in [('戦艦大和 天一号作戦', f1, size * 0.555, (236, 228, 208)), ('TECH GYM', f2, size * 0.612, (190, 160, 90))]:
+    for text, f, y, col in [('戦艦大和 天一号作戦', f1, size * 0.555, (236, 228, 208)), ('BATTLESHIP YAMATO  OPERATION TEN-GO', f2, size * 0.605, (200, 194, 176)), ('TECH GYM', f2, size * 0.635, (190, 160, 90))]:
         w = d.textlength(text, font=f)
         d.text(((size - w) / 2, y), text, font=f, fill=col)
     return img.convert('RGB')

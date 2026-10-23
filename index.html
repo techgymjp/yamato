@@ -63,6 +63,12 @@
   button.main:hover{background:#9a2a1e}
   button.sel{outline:2px solid var(--gold)}
   .note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.7}
+  html[lang=en] .title{letter-spacing:.03em;font-size:clamp(28px,4.4vw,44px)}
+  html[lang=en] .title small{letter-spacing:.2em}
+  html[lang=en] #br{width:300px}
+  .langSel{display:flex;gap:8px;margin:10px 0 0}
+  .langSel .langBtn{font-size:13px;padding:5px 14px;border-radius:16px;letter-spacing:.05em}
+  .langSel .langBtn.on{background:#7a1f16;border-color:#c0473a;font-weight:900}
   .legal{font-size:12px;color:var(--dim);margin:10px 0 0}
   .legal a{color:var(--dim);text-decoration:underline;padding:6px 2px}
   #buildInfo{margin-right:8px;opacity:.8}
@@ -81,7 +87,7 @@
     #result .big{font-size:28px!important} #result .sub{margin:2px 0!important;font-size:12px!important} #result .stats{margin:6px 0!important;gap:5px!important} #result .stats div{padding:3px 8px!important;font-size:11.5px!important} #result .stats b{font-size:16px!important}
     .hist{font-size:12.5px!important;line-height:1.6!important} .btns{margin-top:10px} button.main{padding:8px 24px;font-size:17px}
     .cont-count{font-size:40px}
-    #title .title{font-size:26px} #title .title br{display:none} #title .title small{display:inline;margin-right:10px;font-size:13px;letter-spacing:.3em}
+    #title .title{font-size:26px!important} #title .title br{display:none} #title .title small{display:inline;margin-right:10px;font-size:13px;letter-spacing:.3em}
     #title .box > p:first-of-type, #title .note{display:none}
     #result .box{display:flex;flex-direction:column}
     #result .btns{order:3;margin-top:4px} #result .share{order:4;margin-top:8px;padding-top:8px} #result .hist{order:5;margin-top:10px}
@@ -140,92 +146,87 @@
 
 <div id="tl" class="hud">
   <div class="clock" id="clock">12:20</div>
-  <div id="dateTxt">昭和20年4月7日　曇・低雲</div>
-  <div>沖縄まで <b id="distTxt">240</b> 浬</div>
+  <div id="dateTxt" data-i18n="hud.date">昭和20年4月7日　曇・低雲</div>
+  <div><span data-i18n="hud.toOkinawa">沖縄まで</span> <b id="distTxt">240</b> <span data-i18n="hud.nm">浬</span></div>
   <div id="route"><div id="routeFill"></div></div>
-  <div class="ends"><span>坊ノ岬沖</span><span>沖縄</span></div>
+  <div class="ends"><span data-i18n="hud.from">坊ノ岬沖</span><span data-i18n="hud.to">沖縄</span></div>
 </div>
 <div id="tr" class="hud">
-  <div>敵機撃墜</div>
+  <div data-i18n="hud.kills">敵機撃墜</div>
   <div class="kills" id="killTxt">0</div>
-  <div>敵空母撃沈 <b id="carTxt">0</b> / 6</div>
-  <div>被雷 <span id="torpTxt">0</span>　体当たり <span id="crashTxt">0</span>　被弾 <span id="bombTxt">0</span></div>
+  <div><span data-i18n="hud.carriers">敵空母撃沈</span> <b id="carTxt">0</b> / 6</div>
+  <div><span data-i18n="hud.torp">被雷</span> <span id="torpTxt">0</span>　<span data-i18n="hud.crash">体当たり</span> <span id="crashTxt">0</span>　<span data-i18n="hud.bomb">被弾</span> <span id="bombTxt">0</span></div>
 </div>
 <div id="log" class="hud"></div>
 <div id="alert" class="hud"></div>
-<div id="lockHint" class="hud">クリックで照準開始（マウスで自由に見回せます）</div>
+<div id="lockHint" class="hud" data-i18n="hud.lockHint">クリックで照準開始（マウスで自由に見回せます）</div>
 <div id="bl" class="hud">
   <canvas id="incl" width="300" height="150"></canvas>
   <div id="listTxt">横転まで あと 30°</div>
 </div>
 <div id="br" class="hud">
   <div id="beamBox">
-    <div class="lbl"><span>レールガン</span><span id="enTxt">0%</span></div>
+    <div class="lbl"><span data-i18n="hud.railgun">レールガン</span><span id="enTxt">0%</span></div>
     <div class="bar"><i id="enBar"></i></div>
-    <div id="beamHint">充電中…</div>
+    <div id="beamHint" data-i18n="hud.charging">充電中…</div>
   </div>
-  <div id="keys">
-    マウス 照準／クリック長押し ミサイル連射<br>
-    右クリック・<span class="key">Space</span> レールガン<br>
-    <span class="key">A</span><span class="key">D</span> 転舵（雷跡をかわす）<span class="key">M</span> BGM <span class="key">P</span> 一時停止
-  </div>
+  <div id="keys" data-i18n-html="hud.keys"></div>
 </div>
 <div id="radarWrap" class="hud"><canvas id="radar" width="170" height="170"></canvas></div>
 
 <div id="touch">
-  <div class="grp left"><button data-k="left">◀ 取舵</button><button data-k="right">面舵 ▶</button></div>
-  <div class="grp right"><button data-k="fire" class="fireBtn">ミサイル</button><button data-k="beam">レールガン</button><button data-k="auto">自動射撃 OFF</button></div>
+  <div class="grp left"><button data-k="left" data-i18n="btn.left">◀ 取舵</button><button data-k="right" data-i18n="btn.right">面舵 ▶</button></div>
+  <div class="grp right"><button data-k="fire" class="fireBtn" data-i18n="btn.fire">ミサイル</button><button data-k="beam" data-i18n="btn.beam">レールガン</button><button data-k="auto" id="autoBtn" data-i18n="btn.autoOff">自動射撃 OFF</button></div>
 </div>
 
 <div id="title" class="panel">
   <div class="box">
-    <h1 class="title"><small>昭和二十年四月七日</small>戦艦大和<br>天一号作戦</h1>
-    <p>昭和20年4月、沖縄へ向かう戦艦大和に、米第58任務部隊の艦載機が雲霞のごとく襲いかかる。米軍機は大和を転覆させるため、<b style="color:#ff8b78">左舷</b>に魚雷と爆弾を集中してくる——。</p>
-    <div class="rule">敵機の猛攻に耐え抜き、沖縄までたどり着け。<br>
-      <b style="color:#ff8b78">左への傾斜が30°に達したら横転・沈没</b>で終わり。<br>
-      <span style="font-size:15px">傾きはほとんど戻らない。魚雷は撃ち落とすより、転舵してかわせ。</span></div>
-    <h3>操作</h3>
+    <h1 class="title"><small data-i18n="title.date">昭和二十年四月七日</small><span data-i18n-html="title.name">戦艦大和<br>天一号作戦</span></h1>
+    <p class="lead" data-i18n-html="title.lead"></p>
+    <div class="rule" data-i18n-html="title.rule"></div>
+    <h3 data-i18n="title.controls">操作</h3>
     <div class="ctl">
-      <span class="kb">マウス</span><span class="kb">照準。画面をクリックすると、マウスで自由に見回せる（上空・左右・後方もOK）</span>
-      <span class="kb">クリック長押し</span><span class="kb">ミサイル連射（弾数無制限・照準近くの敵機を自動追尾）</span>
-      <span class="kb">右クリック／<span class="key">Space</span></span><span class="kb">レールガン（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
-      <span class="kb"><span class="key">A</span><span class="key">D</span></span><span class="kb">転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
-      <span class="kb"><span class="key">M</span></span><span class="kb">BGM オン／オフ</span>
-      <span class="tc">画面をドラッグ</span><span class="tc">照準（上空・左右・後方も見回せる）</span>
-      <span class="tc">ミサイル</span><span class="tc">押している間ミサイル連射。押したまま指をずらすと照準も動く。「自動射撃 ON」なら照準を動かすだけで連射</span>
-      <span class="tc">レールガン</span><span class="tc">ゲージ満タンで発射。照準の方向へ一直線。水平線の敵空母も狙える</span>
-      <span class="tc">取舵・面舵</span><span class="tc">転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
+      <span class="kb" data-i18n="ctl.mouse"></span><span class="kb" data-i18n="ctl.mouseD"></span>
+      <span class="kb" data-i18n="ctl.click"></span><span class="kb" data-i18n="ctl.clickD"></span>
+      <span class="kb"><span data-i18n="ctl.rclick"></span><span class="key">Space</span></span><span class="kb" data-i18n="ctl.rclickD"></span>
+      <span class="kb"><span class="key">A</span><span class="key">D</span></span><span class="kb" data-i18n-html="ctl.rudderD"></span>
+      <span class="kb"><span class="key">M</span></span><span class="kb" data-i18n="ctl.bgm"></span>
+      <span class="tc" data-i18n="ctl.drag"></span><span class="tc" data-i18n="ctl.dragD"></span>
+      <span class="tc" data-i18n="ctl.fireT"></span><span class="tc" data-i18n="ctl.fireTD"></span>
+      <span class="tc" data-i18n="ctl.beamT"></span><span class="tc" data-i18n="ctl.beamTD"></span>
+      <span class="tc" data-i18n="ctl.rudderT"></span><span class="tc" data-i18n-html="ctl.rudderD"></span>
     </div>
     <div class="btns">
-      <span style="font-size:14px;color:var(--dim)">難易度</span>
-      <button data-diff="0.7">易</button><button data-diff="1" class="sel">普通</button><button data-diff="1.4">史実</button>
+      <span style="font-size:14px;color:var(--dim)" data-i18n="diff.label">難易度</span>
+      <button data-diff="0.7" data-i18n="diff.easy">易</button><button data-diff="1" class="sel" data-i18n="diff.normal">普通</button><button data-diff="1.4" data-i18n="diff.hist">史実</button>
       <span style="flex:1"></span>
-      <button class="main" id="startBtn">出撃</button>
+      <button class="main" id="startBtn" data-i18n="title.start">出撃</button>
     </div>
-    <div class="note">※ レールガンとミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。</div>
+    <div class="note" data-i18n="title.note"></div>
     <p class="legal">
       <span id="buildInfo"></span>
-      <a href="https://techgym.jp/privacy-policy/" target="_blank" rel="noopener">プライバシーポリシー</a>
-      <span id="adPrivacy" style="display:none">｜<a href="#" id="adPrivacyLink">広告の設定</a></span>
+      <a href="https://techgym.jp/privacy-policy/" data-i18n-href="url.privacy" target="_blank" rel="noopener" data-i18n="legal.privacy">プライバシーポリシー</a>
+      <span id="adPrivacy" style="display:none">｜<a href="#" id="adPrivacyLink" data-i18n="legal.adSettings">広告の設定</a></span>
       <span>｜© TECH GYM</span>
     </p>
+    <p class="langSel"><button class="langBtn" data-lang="ja">日本語</button><button class="langBtn" data-lang="en">English</button></p>
   </div>
 </div>
 
 <div id="pause" class="panel" style="display:none">
   <div class="box small">
-    <p class="big">一時停止</p>
-    <div class="btns"><button class="main" id="resumeBtn">戦闘再開</button><button id="quitBtn">タイトルへ</button></div>
+    <p class="big" data-i18n="pause.title">一時停止</p>
+    <div class="btns"><button class="main" id="resumeBtn" data-i18n="pause.resume">戦闘再開</button><button id="quitBtn" data-i18n="pause.quit">タイトルへ</button></div>
   </div>
 </div>
 
 <div id="continue" class="panel" style="display:none">
   <div class="box small">
-    <p class="big" style="color:#ff8b78">傾斜 30°</p>
-    <p class="cont-lead">広告を見ると、応急修理で傾斜を 12° まで戻して戦闘を続けられます<br><small>（1 回の出撃につき 1 回まで）</small></p>
+    <p class="big" style="color:#ff8b78" data-i18n="cont.title">傾斜 30°</p>
+    <p class="cont-lead" data-i18n-html="cont.lead"></p>
     <div class="cont-count" id="contCount">10</div>
     <p class="cont-note" id="contNote"></p>
-    <div class="btns"><button class="main" id="contWatch">▶ 広告を見て応急修理</button><button id="contGiveUp">あきらめる</button></div>
+    <div class="btns"><button class="main" id="contWatch">▶ 広告を見て応急修理</button><button id="contGiveUp" data-i18n="cont.giveUp">あきらめる</button></div>
   </div>
 </div>
 
@@ -235,17 +236,18 @@
     <div class="sub" id="resSub"></div>
     <div class="stats" id="resStats"></div>
     <p class="hist" id="resHist"></p>
-    <div class="btns"><button class="main" id="againBtn">再び出撃</button><button id="viewBtn">艦影を眺める</button></div>
+    <div class="btns"><button class="main" id="againBtn" data-i18n="res.again">再び出撃</button><button id="viewBtn" data-i18n="res.view">艦影を眺める</button></div>
     <div class="share">
-      <span>結果をシェア</span>
+      <span data-i18n="share.label">結果をシェア</span>
       <button data-share="x">X（Twitter）</button><button data-share="line">LINE</button><button data-share="fb">Facebook</button>
-      <button data-share="copy">リンクをコピー</button><button data-share="native" id="nativeShare" style="display:none">その他…</button>
-      <button data-share="app" id="appShare" style="display:none">シェアする</button>
+      <button data-share="copy" data-i18n="share.copy">リンクをコピー</button><button data-share="native" id="nativeShare" style="display:none" data-i18n="share.more">その他…</button>
+      <button data-share="app" id="appShare" style="display:none" data-i18n="share.app">シェアする</button>
     </div>
   </div>
 </div>
 
 <script src="js/vendor/three.min.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/build-info.js"></script>
 <script src="js/ads-config.js"></script>
 <script src="js/ads.js"></script>
@@ -253,6 +255,7 @@
 'use strict';
 // Android アプリ（Capacitor）で動いているか。Web 版では Capacitor がないので何もしない
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const t = I18N.t;
 const plugin = name => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
 // 広告の表示中などに音を止める（js/ads.js から呼ぶ）
 const GameAudio = {
@@ -848,9 +851,9 @@ function makeCarrier() {
 
 // 米艦載機（機首 +Z）
 const PLANE_TYPES = {
-  torp: { name: 'TBM アヴェンジャー', short: '雷', color: '#ff5a48', span: 16, len: 12, fat: 1.25 },
-  dive: { name: 'SB2C ヘルダイバー', short: '爆', color: '#ffa13a', span: 15, len: 11, fat: 1.05 },
-  fighter: { name: 'F6F ヘルキャット', short: '戦', color: '#ffe066', span: 13, len: 10, fat: 1.0 },
+  torp: { name: 'TBM Avenger', short: 'T', color: '#ff5a48', span: 16, len: 12, fat: 1.25 },
+  dive: { name: 'SB2C Helldiver', short: 'B', color: '#ffa13a', span: 15, len: 11, fat: 1.05 },
+  fighter: { name: 'F6F Hellcat', short: 'F', color: '#ffe066', span: 13, len: 10, fat: 1.0 },
 };
 // 機体を1つのジオメトリに焼き込む（大量の敵機を描画するため）
 function bakeGroup(group) {
@@ -1039,12 +1042,12 @@ const escorts = ESCORT_DEF.map(d => {
   return { ...d, mesh: m, ox: Math.sin(d.ang * DEG) * r, oz: -Math.cos(d.ang * DEG) * r, sinking: 0, alive: true, pos: V3(), hd: 0 };
 });
 const CARRIER_DEF = [
-  { name: 'ホーネット', tg: '第58.1群', b: -28, d: 5200 },
-  { name: 'ベニントン', tg: '第58.1群', b: -40, d: 6200 },
-  { name: 'エセックス', tg: '第58.3群', b: -55, d: 4800 },
-  { name: 'バンカーヒル', tg: '第58.3群', b: -68, d: 5800 },
-  { name: 'ヨークタウン', tg: '第58.4群', b: -16, d: 6600 },
-  { name: 'イントレピッド', tg: '第58.4群', b: 14, d: 5600 },
+  { name: 'Hornet', tg: '第58.1群', b: -28, d: 5200 },
+  { name: 'Bennington', tg: '第58.1群', b: -40, d: 6200 },
+  { name: 'Essex', tg: '第58.3群', b: -55, d: 4800 },
+  { name: 'BunkerHill', tg: '第58.3群', b: -68, d: 5800 },
+  { name: 'Yorktown', tg: '第58.4群', b: -16, d: 6600 },
+  { name: 'Intrepid', tg: '第58.4群', b: 14, d: 5600 },
 ];
 let carriers = [];
 let island = null;
@@ -1215,8 +1218,8 @@ function updatePlanes(dt) {
           torps.push({ pos: V3(p.x, -1.2, p.z), dir, t: 0, run: 0, mesh: tm, wake: 0 });
           if (pl.mesh.userData.payload) pl.mesh.userData.payload.visible = false;
           splash(V3(p.x, 0, p.z), 0.5);
-          if (G.alertT <= 0) alertMsg(toLocal(p).x < 0 ? '左舷 雷跡！ A・Dで転舵せよ' : '右舷 雷跡！ 転舵せよ');
-          if (!G.torpHint) { G.torpHint = true; msg('ヒント：A・Dで転舵し、艦首か艦尾を雷跡（赤い点線）に向けると魚雷は外れる', 'hist'); }
+          if (G.alertT <= 0) alertMsg(t(toLocal(p).x < 0 ? (document.body.classList.contains('touch') ? 'alert.torpPortTouch' : 'alert.torpPort') : 'alert.torpStar'));
+          if (!G.torpHint) { G.torpHint = true; msg(t(document.body.classList.contains('touch') ? 'msg.torpHintTouch' : 'msg.torpHint'), 'hist'); }
           pl.state = 'egress'; pl.t = 0;
         }
       }
@@ -1224,7 +1227,7 @@ function updatePlanes(dt) {
       if (pl.state === 'approach') {
         const lead = tmpV2.copy(G.vel).multiplyScalar(5).add(shipC);
         desired = altDesired(lead.clone().sub(p), p, 1000);
-        if (hd < 520) { pl.state = 'dive'; pl.t = 0; if (!G.diveHint) { G.diveHint = true; msg('ヒント：急降下爆撃機（オレンジ）は降下前に撃て。真上で落とすと残骸が突っ込んでくる', 'hist'); } }
+        if (hd < 520) { pl.state = 'dive'; pl.t = 0; if (!G.diveHint) { G.diveHint = true; msg(t('msg.diveHint'), 'hist'); } }
       } else if (pl.state === 'dive') {
         pl.speed = Math.min(150, pl.speed + 30 * dt);
         const tt = Math.max(1.5, p.distanceTo(shipC) / 160);
@@ -1297,12 +1300,12 @@ function hitShip(local, kind) {
     G.torpHits++; addList(local, 3.5);
     splash(fromLocal(local.x, 0, local.z), 2.6); explosion(hp, 1.5);
     G.shake = 1.3; AU.boom(0, 1.6);
-    alertMsg(port ? '左舷 魚雷命中！ 傾斜増大' : '右舷 魚雷命中！');
+    alertMsg(t(port ? 'alert.torpHitPort' : 'alert.torpHitStar'));
     emitters.push({ lx: local.x * 0.9, ly: 3, lz: local.z, t: 40, fire: false });
   } else if (kind === 'crash') {
     G.crashHits++; addList(local, 3.5);
     explosion(hp, 2.6); G.shake = 1.5; AU.boom(0, 1.8);
-    alertMsg(port ? '左舷に敵機 体当たり！' : '右舷に敵機 体当たり！');
+    alertMsg(t(port ? 'alert.crashPort' : 'alert.crashStar'));
     emitters.push({ lx: local.x, ly: local.y, lz: local.z, t: 60, fire: true });
   } else if (kind === 'bomb') {
     G.bombHits++; addList(local, 1.2);
@@ -1324,7 +1327,7 @@ function updateOrdnance(dt) {
     if (o.wake <= 0) { o.wake = 0.035; PN.spawn(o.pos.x + rand(-1, 1), 0.9, o.pos.z + rand(-1, 1), rand(-0.4, 0.4), 0, rand(-0.4, 0.4), 9, 2.5, 9, 0.95, 0.97, 1, 0.8); }
     const lc = toLocal(o.pos), hw = yHalfW(lc.z), dShip = Math.hypot(o.pos.x - G.pos.x, o.pos.z - G.pos.z);
     if (o.minD === undefined || dShip < o.minD) o.minD = dShip;
-    else if (!o.passed && o.minD < 260 && dShip > o.minD + 30) { o.passed = true; G.dodged++; msg('魚雷回避！', 'good'); }
+    else if (!o.passed && o.minD < 260 && dShip > o.minD + 30) { o.passed = true; G.dodged++; msg(t('msg.dodged'), 'good'); }
     if (o.run > 90 && hw > 0 && Math.abs(lc.x) < hw + 1) {
       hitShip({ x: Math.sign(lc.x) * hw, y: 2, z: lc.z }, 'torp');
       scene.remove(o.mesh); torps.splice(i, 1); continue;
@@ -1447,7 +1450,7 @@ function fireBeam(aim) {
     if (pl.state === 'falling') continue;
     const [al, lat] = lateral(pl.pos); if (al > 0 && lat < 110) { killPlane(pl, false); n++; }
   }
-  if (n) msg(`レールガン 命中！ 敵機 ${n} 機 撃墜`, 'good');
+  if (n) msg(t('msg.railHit', { n }), 'good');
   for (const c of carriers) {
     if (!c.alive) continue;
     const [al, lat] = lateral(tmpV.copy(c.pos).setY(15));
@@ -1455,7 +1458,7 @@ function fireBeam(aim) {
       c.alive = false; c.sink = 0.001; G.csunk++;
       explosion(V3(c.pos.x, 30, c.pos.z), 9);
       setTimeout(() => AU.boom(1500, 2), 600);
-      msg(`敵空母「${c.name}」撃沈！ 敵機の来襲が減る`, 'good');
+      msg(t('msg.carrierSunk', { name: t('name.' + c.name) }), 'good');
     }
   }
 }
@@ -1464,12 +1467,12 @@ function fireBeam(aim) {
 //  史実イベント
 // ============================================================
 const HIST = [
-  { t: 12 * 60 + 21, f: () => msg('12:20 電探、敵大編隊を探知。方位090（左舷）', 'hist') },
-  { t: 12 * 60 + 32, f: () => { msg('12:32 敵機来襲！ 対空戦闘！', 'warn'); alertMsg('対空戦闘 用意！'); AU.alarm(); } },
-  { t: 12 * 60 + 48, f: () => sinkEscort('浜風', '12:48 駆逐艦「浜風」被雷 轟沈') },
-  { t: 14 * 60 + 5, f: () => sinkEscort('矢矧', '14:05 軽巡洋艦「矢矧」沈没') },
-  { t: 14 * 60 + 23, f: () => { msg('14:23 史実では、この時刻に大和は横転・沈没した——', 'hist'); setTimeout(() => state === 'play' && msg('だが本艦は健在なり。進め、沖縄へ！', 'good'), 2500); } },
-  { t: 17 * 60 + 50, f: () => msg('日没迫る。沖縄まであとわずか', 'hist') },
+  { t: 12 * 60 + 21, f: () => msg(t('msg.radar'), 'hist') },
+  { t: 12 * 60 + 32, f: () => { msg(t('msg.raid'), 'warn'); alertMsg(t('alert.aa')); AU.alarm(); } },
+  { t: 12 * 60 + 48, f: () => sinkEscort('浜風', t('msg.hamakaze')) },
+  { t: 14 * 60 + 5, f: () => sinkEscort('矢矧', t('msg.yahagi')) },
+  { t: 14 * 60 + 23, f: () => { msg(t('msg.1423'), 'hist'); setTimeout(() => state === 'play' && msg(t('msg.stillAfloat'), 'good'), 2500); } },
+  { t: 17 * 60 + 50, f: () => msg(t('msg.sunset'), 'hist') },
 ];
 function sinkEscort(name, text) {
   const e = escorts.find(x => x.name === name);
@@ -1484,7 +1487,7 @@ const locked = () => document.pointerLockElement === cv;
 function setMouse(x, y) { mouse.sx = x; mouse.sy = y; mouse.x = x / innerWidth * 2 - 1; mouse.y = -(y / innerHeight) * 2 + 1; }
 addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (e.code === 'KeyM') { BGM.setOn(!BGM.on); if (G && state === 'play') msg(BGM.on ? 'BGM オン' : 'BGM オフ'); }
+  if (e.code === 'KeyM') { BGM.setOn(!BGM.on); if (G && state === 'play') msg(t(BGM.on ? 'msg.bgmOn' : 'msg.bgmOff')); }
   if (state !== 'play') return;
   if (e.code === 'Space') { e.preventDefault(); tryBeam(); }
 });
@@ -1517,7 +1520,7 @@ function lookBy(dx, dy, k = 0.005) {
 }
 function pressBtn(b) {
   const k = b.dataset.k;
-  if (k === 'auto') { autoFire = !autoFire; b.textContent = autoFire ? '自動射撃 ON' : '自動射撃 OFF'; b.classList.toggle('sel', autoFire); return; }
+  if (k === 'auto') { autoFire = !autoFire; b.dataset.i18n = autoFire ? 'btn.autoOn' : 'btn.autoOff'; b.textContent = t(b.dataset.i18n); b.classList.toggle('sel', autoFire); return; }
   touchHold[k] = true; if (k === 'beam') tryBeam();
 }
 addEventListener('pointerdown', e => {
@@ -1558,7 +1561,7 @@ function aimDir() {
 function tryBeam() {
   if (!G || state !== 'play') return;
   if (G.energy >= 100) fireBeam(aimDir());
-  else msg(`レールガン 充電中（${G.energy.toFixed(0)}%）`);
+  else msg(t('msg.railCharging', { n: G.energy.toFixed(0) }));
 }
 
 // ============================================================
@@ -1701,7 +1704,7 @@ function updateIsland() {
     geo.computeVertexNormals();
     island.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0x4f6a3e })));
     scene.add(island);
-    msg('前方に島影！ 沖縄本島を視認', 'good');
+    msg(t('msg.island'), 'good');
   }
   if (island) { const b = -G.heading; routePos(b, 1400 + G.dist / 14 * 7000 + 2500, island.position); island.rotation.y = G.heading; }
 }
@@ -1750,12 +1753,12 @@ function updateHUD() {
   $('carTxt').textContent = G.csunk;
   $('torpTxt').textContent = G.torpHits; $('bombTxt').textContent = G.bombHits; $('crashTxt').textContent = G.crashHits;
   const rem = Math.max(0, MAX_LIST - G.list);
-  const lt = $('listTxt'); lt.textContent = `横転まで あと ${rem.toFixed(1)}°`; lt.style.color = rem < 10 ? '#ff6a55' : '#e9e3d2';
-  $('enTxt').textContent = G.energy >= 100 ? '充電完了' : G.energy.toFixed(0) + '%';
+  const lt = $('listTxt'); lt.textContent = t('hud.toCapsize', { n: rem.toFixed(1) }); lt.style.color = rem < 10 ? '#ff6a55' : '#e9e3d2';
+  $('enTxt').textContent = G.energy >= 100 ? t('hud.charged') : G.energy.toFixed(0) + '%';
   $('enBar').style.width = G.energy + '%';
   const ready = G.energy >= 100;
   $('beamBox').classList.toggle('ready', ready);
-  $('beamHint').textContent = ready ? (document.body.classList.contains('touch') ? '発射可能！ レールガンボタン' : '発射可能！ 右クリック / Space') : '充電中…（撃墜でも溜まる）';
+  $('beamHint').textContent = t(ready ? (document.body.classList.contains('touch') ? 'hud.readyTouch' : 'hud.readyKb') : 'hud.chargingKills');
   $('lockHint').style.display = (!locked() && !document.body.classList.contains('touch') && G.elapsed < 20) ? 'block' : 'none';
   drawIncl(); if ((hudTick++ & 1) === 0) drawRadar();
 }
@@ -1776,8 +1779,8 @@ function drawIncl() {
   x.strokeStyle = Math.abs(G.list) > 20 ? '#ff5a48' : '#fff'; x.lineWidth = 3;
   x.beginPath(); x.moveTo(cx + Math.cos(an) * (R - 34), cy + Math.sin(an) * (R - 34)); x.lineTo(cx + Math.cos(an) * (R + 8), cy + Math.sin(an) * (R + 8)); x.stroke();
   x.fillStyle = Math.abs(G.list) > 20 ? '#ff5a48' : '#fff'; x.font = 'bold 18px serif';
-  x.fillText(`傾斜 ${G.list > 0.3 ? '左' : G.list < -0.3 ? '右' : ''} ${Math.abs(G.list).toFixed(1)}°`, cx, cy - 48);
-  x.font = '12px serif'; x.fillStyle = '#ff8b78'; x.fillText('左舷', cx - R - 2, cy + 16); x.fillStyle = '#aaa'; x.fillText('右舷', cx + R + 2, cy + 16);
+  x.fillText(t('hud.list', { side: G.list > 0.3 ? t('hud.listL') : G.list < -0.3 ? t('hud.listR') : '', n: Math.abs(G.list).toFixed(1) }).replace('  ', ' '), cx, cy - 48);
+  x.font = '12px serif'; x.fillStyle = '#ff8b78'; x.fillText(t('hud.port'), cx - R - 2, cy + 16); x.fillStyle = '#aaa'; x.fillText(t('hud.star'), cx + R + 2, cy + 16);
 }
 function drawRadar() {
   const x = rdr, S = 170, c = S / 2, R = 80, range = 3200; x.clearRect(0, 0, S, S);
@@ -1791,7 +1794,7 @@ function drawRadar() {
   for (const cc of carriers) if (cc.alive) { const l = toLocal(cc.pos), a = Math.atan2(l.z, l.x); x.fillStyle = '#ff6a55'; x.beginPath(); x.arc(c + Math.cos(a) * (R - 4), c + Math.sin(a) * (R - 4), 4, 0, Math.PI * 2); x.fill(); }
   x.fillStyle = '#fff'; x.beginPath(); x.moveTo(c, c - 8); x.lineTo(c - 4, c + 6); x.lineTo(c + 4, c + 6); x.fill();
   x.strokeStyle = 'rgba(255,220,120,.7)'; x.beginPath(); x.moveTo(c, c); x.lineTo(c - Math.sin(G.yaw) * R, c - Math.cos(G.yaw) * R); x.stroke();
-  x.fillStyle = '#9fd'; x.font = '10px serif'; x.textAlign = 'center'; x.fillText('電探（黄線＝視線）', c, S - 2);
+  x.fillStyle = '#9fd'; x.font = '10px serif'; x.textAlign = 'center'; x.fillText(t('hud.radar'), c, S - 2);
 }
 const projV = V3();
 function project(p) { projV.copy(p).project(camera); if (projV.z > 1 || projV.z < -1) return null; return [(projV.x + 1) / 2 * innerWidth, (1 - projV.y) / 2 * innerHeight]; }
@@ -1809,7 +1812,7 @@ function drawOverlay() {
     x.beginPath();
     for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { x.moveTo(s[0] + sx * r, s[1] + sy * r * 0.4); x.lineTo(s[0] + sx * r, s[1] + sy * r); x.lineTo(s[0] + sx * r * 0.4, s[1] + sy * r); }
     x.stroke();
-    if (pl.type === 'torp' && pl.state !== 'egress') { x.fillStyle = pl.T.color; x.fillText('雷', s[0], s[1] - r - 3); }
+    if (pl.type === 'torp' && pl.state !== 'egress') { x.fillStyle = pl.T.color; x.fillText(t('hud.torpTag'), s[0], s[1] - r - 3); }
   }
   x.save(); x.setLineDash([8, 6]); x.strokeStyle = 'rgba(255,90,72,.9)'; x.lineWidth = 2.5;
   for (const t of torps) {
@@ -1825,7 +1828,7 @@ function drawOverlay() {
     if (!c.alive) continue;
     const s = project(tmpV2.copy(c.pos).setY(40)); if (!s) continue;
     x.strokeStyle = '#ff6a55'; x.fillStyle = '#ff6a55'; x.strokeRect(s[0] - 26, s[1] - 10, 52, 20);
-    x.font = '11px serif'; x.fillText(`敵空母 ${c.name}`, s[0], s[1] - 15); x.font = 'bold 12px serif';
+    x.font = '11px serif'; x.fillText(t('hud.carrierTag', { name: t('name.' + c.name) }), s[0], s[1] - 15); x.font = 'bold 12px serif';
   }
   // 照準
   const centered = locked() || document.body.classList.contains('touch');
@@ -1899,16 +1902,15 @@ function updateEnding(dt) {
 function showResult() {
   const r = $('result'); r.dataset.shown = '1'; r.style.display = 'flex';
   const win = G.endCause === 'win', c = fmtClock(G.endClock);
-  $('resTitle').textContent = win ? '沖縄 到達' : '大和 沈没';
+  $('resTitle').textContent = t(win ? 'res.win' : 'res.sunk');
   $('resTitle').style.color = win ? '#e9d48a' : '#e9e3d2';
-  $('resSub').textContent = `昭和20年4月${7 + c.d}日 ${c.s}　${win ? '天一号作戦 成功' : '左舷への被害で傾斜30°に達し、左へ横転'}`;
+  $('resSub').textContent = `${t('res.subDate', { d: 7 + c.d, time: c.s })}　${t(win ? 'res.subWin' : 'res.subSunk')}`;
   const m = Math.floor(G.elapsed / 60), s = Math.floor(G.elapsed % 60);
-  const st = [['敵機撃墜', G.kills + G.aaKills], ['敵空母撃沈', `${G.csunk} / 6`], ['被雷', `${G.torpHits} 本`], ['体当たり', `${G.crashHits} 機`], ['魚雷回避', `${G.dodged} 本`], ['被弾', `${G.bombHits} 発`],
-    ['耐えた時間', `${m}分${String(s).padStart(2, '0')}秒`], ['残り航程', `${G.dist.toFixed(1)} 浬`]];
+  const st = [['st.kills', G.kills + G.aaKills], ['st.carriers', `${G.csunk} / 6`], ['st.torp', t('st.torpV', { n: G.torpHits })], ['st.crash', t('st.crashV', { n: G.crashHits })],
+    ['st.dodged', t('st.dodgedV', { n: G.dodged })], ['st.bomb', t('st.bombV', { n: G.bombHits })],
+    ['st.time', t('st.timeV', { m, s: String(s).padStart(2, '0') })], ['st.dist', t('st.distV', { n: G.dist.toFixed(1) })]].map(([k, v]) => [t(k), v]);
   $('resStats').innerHTML = st.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('');
-  $('resHist').textContent = win
-    ? '史実の大和は沖縄にたどり着けなかった。1945年4月7日14時23分、米軍機延べ約386機の攻撃を受け、左舷に魚雷を集中された大和は左へ横転、弾火薬庫が誘爆して坊ノ岬沖（北緯30度43分 東経128度04分付近）に沈んだ。乗員約3,332名のうち生存者は276名、第二艦隊全体の戦死者は約3,700名にのぼる（数値は諸説あり）。このゲームの結末は、かなわなかった「もしも」である。'
-    : '史実：1945年4月7日14時23分、大和は米第58任務部隊の艦載機延べ約386機の攻撃を受け、左舷に集中した魚雷（10本以上、諸説あり）と多数の爆弾により左へ傾斜。右舷への注水も及ばず横転し、弾火薬庫の誘爆とともに坊ノ岬沖（北緯30度43分 東経128度04分付近）に沈没した。その火柱と煙は鹿児島からも望見されたという。乗員約3,332名のうち生存者は276名。第二艦隊全体の戦死者は約3,700名にのぼる。';
+  $('resHist').textContent = t(win ? 'res.histWin' : 'res.histSunk');
 }
 
 // ============================================================
@@ -1935,7 +1937,7 @@ function startGame() {
   G.yaw = 35 * DEG;   // 左舷寄りを向いて開始
   state = 'play'; document.body.classList.add('playing');
   setDaylight(1);
-  msg('昭和20年4月7日 坊ノ岬沖。第一遊撃部隊、沖縄へ向かう', 'hist');
+  msg(t('msg.start'), 'hist');
 }
 // ------------------------------------------------------------
 //  結果のシェア
@@ -1943,8 +1945,8 @@ function startGame() {
 const SHARE_URL = 'https://techgym.jp/column/claude-code-game-yamato/';
 function shareText() {
   const kills = G.kills + G.aaKills;
-  const head = G.endCause === 'win' ? '戦艦大和、沖縄に到達！' : `戦艦大和、${G.dist.toFixed(0)}浬を残して沈没…`;
-  return `${head}\n敵機撃墜${kills}機・空母撃沈${G.csunk}隻・被雷${G.torpHits}本・魚雷回避${G.dodged}本\n#戦艦大和天一号作戦`;
+  const head = G.endCause === 'win' ? t('share.win') : t('share.sunk', { n: G.dist.toFixed(0) });
+  return `${head}\n${t('share.stats', { k: kills, c: G.csunk, t: G.torpHits, d: G.dodged })}\n${t('share.tag')}`;
 }
 if (navigator.share && !NATIVE) $('nativeShare').style.display = '';
 document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click', async () => {
@@ -1955,13 +1957,13 @@ document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click
   else if (kind === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'noopener');
   else if (kind === 'app') {
     const sh = plugin('Share');
-    if (sh) { try { await sh.share({ title: '戦艦大和 天一号作戦', text, url: SHARE_URL, dialogTitle: '結果をシェア' }); } catch (e) { /* キャンセル */ } }
+    if (sh) { try { await sh.share({ title: t('share.title'), text, url: SHARE_URL, dialogTitle: t('share.dialog') }); } catch (e) { /* キャンセル */ } }
   }
-  else if (kind === 'native') { try { await navigator.share({ title: '戦艦大和 天一号作戦', text, url: SHARE_URL }); } catch (e) { /* キャンセル */ } }
+  else if (kind === 'native') { try { await navigator.share({ title: t('share.title'), text, url: SHARE_URL }); } catch (e) { /* キャンセル */ } }
   else {
-    try { await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`); b.textContent = 'コピーしました'; }
-    catch (e) { prompt('このリンクをコピーしてください', SHARE_URL); }
-    setTimeout(() => { b.textContent = 'リンクをコピー'; }, 2000);
+    try { await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`); b.textContent = t('share.copied'); }
+    catch (e) { prompt(t('share.prompt'), SHARE_URL); }
+    setTimeout(() => { b.textContent = t('share.copy'); }, 2000);
   }
 }));
 $('startBtn').addEventListener('click', startGame);
@@ -2008,6 +2010,9 @@ if (plugin('App')) {
   });
 }
 if (NATIVE) document.body.classList.add('app', 'touch');
+// 表示言語（端末の言語で自動選択。タイトル画面で切り替え可能）
+I18N.apply();
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => I18N.setLang(b.dataset.lang)));
 // どのビルドが入っているか分かるよう、アプリ版はタイトル画面にバージョンを出す
 if (window.APP_VERSION && window.APP_VERSION !== 'dev') $('buildInfo').textContent = window.APP_VERSION;
 // EU など同意が必要な地域では、タイトル画面から広告の同意内容を変更できるようにする
@@ -2025,7 +2030,7 @@ function showContinue() {
   mouse.down = false; for (const k in touchHold) touchHold[k] = false;
   if (locked()) document.exitPointerLock();
   if (AU.ctx) AU.droneGain.gain.value = 0;
-  $('contWatch').disabled = false; $('contWatch').textContent = '▶ 広告を見て応急修理'; $('contNote').textContent = '';
+  $('contWatch').disabled = false; $('contWatch').textContent = t('cont.watch'); $('contNote').textContent = '';
   $('contCount').textContent = '10';
   $('continue').style.display = 'flex';
   AU.alarm();
@@ -2045,15 +2050,15 @@ $('contGiveUp').addEventListener('click', giveUp);
 $('contWatch').addEventListener('click', async () => {
   if (state !== 'continue' || contBusy) return;
   contBusy = true;
-  $('contWatch').disabled = true; $('contWatch').textContent = '広告を読み込み中…';
+  $('contWatch').disabled = true; $('contWatch').textContent = t('cont.loading');
   const result = await Ads.showRewarded();
   if (state !== 'continue') return;
-  if (result === 'unavailable') { $('contNote').textContent = '広告を読み込めませんでした'; setTimeout(giveUp, 2200); return; }
+  if (result === 'unavailable') { $('contNote').textContent = t('cont.fail'); setTimeout(giveUp, 2200); return; }
   if (result !== 'rewarded') { giveUp(); return; }
   $('continue').style.display = 'none';
   G.continued = true; G.list = G.listT = 12; G.lastHit = G.elapsed;
   state = 'play'; document.body.classList.add('playing');
-  msg('応急修理完了！ 傾斜 12° まで復元。戦闘続行！', 'good'); alertMsg('応急修理 完了！');
+  msg(t('msg.repaired'), 'good'); alertMsg(t('alert.repaired'));
 });
 $('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') $('result').style.display = 'flex'; }, 15000); });
 
