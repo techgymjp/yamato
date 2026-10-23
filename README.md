@@ -60,7 +60,7 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 
 - EU・英国など同意が必要な地域では、初回起動時に Google の同意確認画面が出ます。その地域では、タイトル画面の「広告の設定」から同意内容をいつでも変更できます。
 - 広告ユニット ID は `js/ads.js`、AdMob のアプリ ID は `android/app/src/main/res/values/strings.xml` にあります。
-  アプリ ID・バナー・インタースティシャルは本番の ID を設定済みです。**リワードの本番 ID はまだ空**で、空の種類は Google Play 版では出しません（設定したら「広告を見て応急修理」が出るようになります）。
+  アプリ ID・バナー・インタースティシャル・リワードとも本番の ID を設定済みです（ID を空にした種類は、Google Play 版では出しません）。
 - 動作確認用 APK（Release の `yamato.apk`）は常に **Google のテスト広告** を表示します。自分でタップしても問題ありません。
 - Google Play 用の .aab をビルドするときだけ、CI が `ADMOB_MODE=production` で本番の広告に切り替えます（`scripts/build-web.js` が `js/ads-config.js` を書き換えます）。
 - 本番の広告を自分でタップするとアカウント停止の対象になるので注意してください。

@@ -12,7 +12,7 @@ const Ads = (() => {
     production: {
       banner: 'ca-app-pub-6411535997477460/7501309310',
       interstitial: 'ca-app-pub-6411535997477460/8622819293',
-      rewarded: '',
+      rewarded: 'ca-app-pub-6411535997477460/4683574289',
     },
   };
   const RETRY_MS = 20000;      // 読み込みに失敗したら少し待って再挑戦する
