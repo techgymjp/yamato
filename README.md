@@ -72,7 +72,11 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 
 https://github.com/techgymjp/yamato/releases/latest/download/yamato.apk
 
-<img src="docs/apk-qr.png" alt="APK ダウンロード用 QR コード" width="180">
+| APK を直接ダウンロード | リリースのページを開く |
+| --- | --- |
+| <img src="docs/apk-qr.png" alt="APK ダウンロード用 QR コード" width="180"> | <img src="docs/release-qr.png" alt="リリースのページの QR コード" width="180"> |
+
+リリースのページ: https://github.com/techgymjp/yamato/releases/tag/android-latest
 
 ダウンロードした `yamato.apk` を開き、「提供元不明のアプリ」のインストールを許可するとインストールできます。
 動作確認用の署名鍵（`android/app/debug.keystore`）はリポジトリで固定しているので、新しいビルドもアンインストールせずに上書きインストールできます。
