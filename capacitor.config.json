@@ -1,0 +1,8 @@
+{
+  "appId": "jp.techgym.yamato",
+  "appName": "戦艦大和 天一号作戦",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#11161a"
+  }
+}

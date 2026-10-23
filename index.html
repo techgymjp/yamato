@@ -63,6 +63,30 @@
   button.main:hover{background:#9a2a1e}
   button.sel{outline:2px solid var(--gold)}
   .note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.7}
+  .legal{font-size:12px;color:var(--dim);margin:10px 0 0}
+  .legal a{color:var(--dim);text-decoration:underline;padding:6px 2px}
+  #buildInfo{margin-right:8px;opacity:.8}
+  .tc{display:none} body.touch .tc{display:inline} body.touch .kb{display:none}
+  .panel .box.small{max-width:520px;text-align:center}
+  .panel .box.small .btns{justify-content:center}
+  .box .big{font-size:clamp(30px,6vw,54px);font-weight:900;letter-spacing:.15em;margin:0}
+  .cont-lead{font-size:15px;line-height:1.7}
+  .cont-count{font-size:56px;font-weight:900;color:var(--gold);line-height:1.1}
+  .cont-note{min-height:1.4em;color:#ffb199;font-size:13px}
+  body.app .share button[data-share]{display:none} body.app .share #appShare{display:inline-block!important}
+  @media (max-height:500px){
+    .panel .box{padding:12px 18px}
+    .title{font-size:30px} .box p{font-size:13px;line-height:1.55;margin:4px 0}
+    .rule{font-size:14px;margin:6px 0;padding:6px 10px} .ctl{font-size:12.5px} .box h3{margin:8px 0 4px}
+    #result .big{font-size:28px!important} #result .sub{margin:2px 0!important;font-size:12px!important} #result .stats{margin:6px 0!important;gap:5px!important} #result .stats div{padding:3px 8px!important;font-size:11.5px!important} #result .stats b{font-size:16px!important}
+    .hist{font-size:12.5px!important;line-height:1.6!important} .btns{margin-top:10px} button.main{padding:8px 24px;font-size:17px}
+    .cont-count{font-size:40px}
+    #title .title{font-size:26px} #title .title br{display:none} #title .title small{display:inline;margin-right:10px;font-size:13px;letter-spacing:.3em}
+    #title .box > p:first-of-type, #title .note{display:none}
+    #result .box{display:flex;flex-direction:column}
+    #result .btns{order:3;margin-top:4px} #result .share{order:4;margin-top:8px;padding-top:8px} #result .hist{order:5;margin-top:10px}
+    #result .stats{grid-template-columns:repeat(4,1fr)!important}
+  }
   #result .big{font-size:clamp(36px,7vw,68px);font-weight:900;letter-spacing:.15em;margin:0}
   #result .sub{color:var(--dim);font-size:14px;margin:6px 0}
   #result .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0}
@@ -143,7 +167,7 @@
   <div id="keys">
     マウス 照準／クリック長押し ミサイル連射<br>
     右クリック・<span class="key">Space</span> レールガン<br>
-    <span class="key">A</span><span class="key">D</span> 転舵（雷跡をかわす）<span class="key">M</span> BGM
+    <span class="key">A</span><span class="key">D</span> 転舵（雷跡をかわす）<span class="key">M</span> BGM <span class="key">P</span> 一時停止
   </div>
 </div>
 <div id="radarWrap" class="hud"><canvas id="radar" width="170" height="170"></canvas></div>
@@ -162,12 +186,15 @@
       <span style="font-size:15px">傾きはほとんど戻らない。魚雷は撃ち落とすより、転舵してかわせ。</span></div>
     <h3>操作</h3>
     <div class="ctl">
-      <span>マウス</span><span>照準。画面をクリックすると、マウスで自由に見回せる（上空・左右・後方もOK）</span>
-      <span>クリック長押し</span><span>ミサイル連射（弾数無制限・照準近くの敵機を自動追尾）</span>
-      <span>右クリック／<span class="key">Space</span></span><span>レールガン（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
-      <span><span class="key">A</span><span class="key">D</span></span><span>転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
-      <span><span class="key">M</span></span><span>BGM オン／オフ</span>
-      <span>スマホ</span><span>画面をドラッグで照準。「ミサイル」ボタンを押したまま指をずらしても照準が動く。「自動射撃 ON」なら照準を動かすだけで連射</span>
+      <span class="kb">マウス</span><span class="kb">照準。画面をクリックすると、マウスで自由に見回せる（上空・左右・後方もOK）</span>
+      <span class="kb">クリック長押し</span><span class="kb">ミサイル連射（弾数無制限・照準近くの敵機を自動追尾）</span>
+      <span class="kb">右クリック／<span class="key">Space</span></span><span class="kb">レールガン（ゲージ満タンで発射）。照準の方向へ一直線。水平線の敵空母も狙える</span>
+      <span class="kb"><span class="key">A</span><span class="key">D</span></span><span class="kb">転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
+      <span class="kb"><span class="key">M</span></span><span class="kb">BGM オン／オフ</span>
+      <span class="tc">画面をドラッグ</span><span class="tc">照準（上空・左右・後方も見回せる）</span>
+      <span class="tc">ミサイル</span><span class="tc">押している間ミサイル連射。押したまま指をずらすと照準も動く。「自動射撃 ON」なら照準を動かすだけで連射</span>
+      <span class="tc">レールガン</span><span class="tc">ゲージ満タンで発射。照準の方向へ一直線。水平線の敵空母も狙える</span>
+      <span class="tc">取舵・面舵</span><span class="tc">転舵。魚雷の進路は<b style="color:#ff8b78">赤い点線</b>で表示。艦首か艦尾を雷跡に向けると当たりにくい</span>
     </div>
     <div class="btns">
       <span style="font-size:14px;color:var(--dim)">難易度</span>
@@ -176,6 +203,29 @@
       <button class="main" id="startBtn">出撃</button>
     </div>
     <div class="note">※ レールガンとミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。</div>
+    <p class="legal">
+      <span id="buildInfo"></span>
+      <a href="https://techgym.jp/privacy-policy/" target="_blank" rel="noopener">プライバシーポリシー</a>
+      <span id="adPrivacy" style="display:none">｜<a href="#" id="adPrivacyLink">広告の設定</a></span>
+      <span>｜© TECH GYM</span>
+    </p>
+  </div>
+</div>
+
+<div id="pause" class="panel" style="display:none">
+  <div class="box small">
+    <p class="big">一時停止</p>
+    <div class="btns"><button class="main" id="resumeBtn">戦闘再開</button><button id="quitBtn">タイトルへ</button></div>
+  </div>
+</div>
+
+<div id="continue" class="panel" style="display:none">
+  <div class="box small">
+    <p class="big" style="color:#ff8b78">傾斜 30°</p>
+    <p class="cont-lead">広告を見ると、応急修理で傾斜を 12° まで戻して戦闘を続けられます<br><small>（1 回の出撃につき 1 回まで）</small></p>
+    <div class="cont-count" id="contCount">10</div>
+    <p class="cont-note" id="contNote"></p>
+    <div class="btns"><button class="main" id="contWatch">▶ 広告を見て応急修理</button><button id="contGiveUp">あきらめる</button></div>
   </div>
 </div>
 
@@ -190,13 +240,25 @@
       <span>結果をシェア</span>
       <button data-share="x">X（Twitter）</button><button data-share="line">LINE</button><button data-share="fb">Facebook</button>
       <button data-share="copy">リンクをコピー</button><button data-share="native" id="nativeShare" style="display:none">その他…</button>
+      <button data-share="app" id="appShare" style="display:none">シェアする</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/vendor/three.min.js"></script>
+<script src="js/build-info.js"></script>
+<script src="js/ads-config.js"></script>
+<script src="js/ads.js"></script>
 <script>
 'use strict';
+// Android アプリ（Capacitor）で動いているか。Web 版では Capacitor がないので何もしない
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const plugin = name => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
+// 広告の表示中などに音を止める（js/ads.js から呼ぶ）
+const GameAudio = {
+  suspend() { try { if (AU.ctx && AU.ctx.state === 'running') AU.ctx.suspend(); } catch (e) { /* 無視 */ } },
+  resume() { try { if (AU.ctx && AU.ctx.state === 'suspended' && !document.hidden) AU.ctx.resume(); } catch (e) { /* 無視 */ } },
+};
 // ============================================================
 //  共通ユーティリティ
 // ============================================================
@@ -1525,7 +1587,7 @@ function updatePlay(dt) {
   if (G.elapsed - G.lastHit > 10) G.listT += (G.listT > 0 ? -0.05 : 0.05) * dt;
   G.list = lerp(G.list, G.listT, Math.min(1, dt * 0.6));
   G.maxList = Math.max(G.maxList, G.list);
-  if (G.list >= MAX_LIST) return endGame('capsize');
+  if (G.list >= MAX_LIST) return canContinue() ? showContinue() : endGame('capsize');
   if (G.elapsed >= DURATION) return endGame('win');
 
   // 敵機の来襲（途切れなく、時間とともに激化）
@@ -1884,13 +1946,17 @@ function shareText() {
   const head = G.endCause === 'win' ? '戦艦大和、沖縄に到達！' : `戦艦大和、${G.dist.toFixed(0)}浬を残して沈没…`;
   return `${head}\n敵機撃墜${kills}機・空母撃沈${G.csunk}隻・被雷${G.torpHits}本・魚雷回避${G.dodged}本\n#戦艦大和天一号作戦`;
 }
-if (navigator.share) $('nativeShare').style.display = '';
+if (navigator.share && !NATIVE) $('nativeShare').style.display = '';
 document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click', async () => {
   const text = shareText(), u = encodeURIComponent(SHARE_URL), t = encodeURIComponent(text);
   const kind = b.dataset.share;
   if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, '_blank', 'noopener');
   else if (kind === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${u}&text=${t}`, '_blank', 'noopener');
   else if (kind === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'noopener');
+  else if (kind === 'app') {
+    const sh = plugin('Share');
+    if (sh) { try { await sh.share({ title: '戦艦大和 天一号作戦', text, url: SHARE_URL, dialogTitle: '結果をシェア' }); } catch (e) { /* キャンセル */ } }
+  }
   else if (kind === 'native') { try { await navigator.share({ title: '戦艦大和 天一号作戦', text, url: SHARE_URL }); } catch (e) { /* キャンセル */ } }
   else {
     try { await navigator.clipboard.writeText(`${text}\n${SHARE_URL}`); b.textContent = 'コピーしました'; }
@@ -1899,7 +1965,96 @@ document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click
   }
 }));
 $('startBtn').addEventListener('click', startGame);
-$('againBtn').addEventListener('click', startGame);
+// 2 回に 1 回、「再び出撃」の前に全画面広告を出す（Android アプリのみ）
+let retryBusy = false, gameOvers = 0;
+$('againBtn').addEventListener('click', async () => {
+  if (retryBusy) return;
+  AU.init();
+  gameOvers++;
+  if (Ads.available && gameOvers % 2 === 0) { retryBusy = true; await Ads.showInterstitial(); retryBusy = false; }
+  startGame();
+});
+
+// ------------------------------------------------------------
+//  一時停止（戻るボタン・アプリの切り替え）
+// ------------------------------------------------------------
+function setPaused(on) {
+  if (state !== 'play' || !G) return;
+  G.paused = on;
+  $('pause').style.display = on ? 'flex' : 'none';
+  document.body.classList.toggle('playing', !on);
+  if (on) { mouse.down = false; for (const k in touchHold) touchHold[k] = false; if (locked()) document.exitPointerLock(); if (AU.ctx) AU.droneGain.gain.value = 0; }
+}
+$('resumeBtn').addEventListener('click', () => setPaused(false));
+$('quitBtn').addEventListener('click', () => { setPaused(false); toTitle(); });
+function toTitle() {
+  state = 'title'; document.body.classList.remove('playing');
+  $('result').style.display = 'none'; $('continue').style.display = 'none'; $('pause').style.display = 'none'; delete $('result').dataset.shown;
+  if (camera.parent) camera.parent.remove(camera); scene.add(camera);
+  newGame(); $('title').style.display = 'flex';
+}
+addEventListener('keydown', e => { if ((e.code === 'KeyP' || e.code === 'Escape') && state === 'play' && !locked()) setPaused(!G.paused); });
+// アプリが裏に回ったら一時停止して音を止める
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (state === 'play') setPaused(true); GameAudio.suspend(); }
+  else GameAudio.resume();
+});
+// Android の戻るボタン：プレイ中はポーズ切替、タイトル・結果画面ではアプリを閉じる
+if (plugin('App')) {
+  plugin('App').addListener('backButton', () => {
+    if (state === 'title' || state === 'ending') plugin('App').exitApp();
+    else if (state === 'continue') giveUp();
+    else setPaused(!G.paused);
+  });
+}
+if (NATIVE) document.body.classList.add('app', 'touch');
+// どのビルドが入っているか分かるよう、アプリ版はタイトル画面にバージョンを出す
+if (window.APP_VERSION && window.APP_VERSION !== 'dev') $('buildInfo').textContent = window.APP_VERSION;
+// EU など同意が必要な地域では、タイトル画面から広告の同意内容を変更できるようにする
+Ads.initDone.then(() => { if (Ads.privacyOptionsRequired) $('adPrivacy').style.display = ''; });
+$('adPrivacyLink').addEventListener('click', e => { e.preventDefault(); Ads.showPrivacyOptions(); });
+
+// ------------------------------------------------------------
+//  リワード広告で応急修理（傾斜 30° に達したとき、1 出撃 1 回）
+// ------------------------------------------------------------
+let contBusy = false, contT = 0;
+function canContinue() { return !G.continued && Ads.available; }
+function showContinue() {
+  state = 'continue'; contT = 10; contBusy = false;
+  document.body.classList.remove('playing');
+  mouse.down = false; for (const k in touchHold) touchHold[k] = false;
+  if (locked()) document.exitPointerLock();
+  if (AU.ctx) AU.droneGain.gain.value = 0;
+  $('contWatch').disabled = false; $('contWatch').textContent = '▶ 広告を見て応急修理'; $('contNote').textContent = '';
+  $('contCount').textContent = '10';
+  $('continue').style.display = 'flex';
+  AU.alarm();
+}
+function updateContinue(dt) {
+  if (contBusy || Ads.showing) return;
+  contT -= dt;
+  $('contCount').textContent = Math.max(0, Math.ceil(contT));
+  if (contT <= 0) giveUp();
+}
+function giveUp() {
+  if (state !== 'continue') return;
+  $('continue').style.display = 'none';
+  state = 'play'; endGame('capsize');
+}
+$('contGiveUp').addEventListener('click', giveUp);
+$('contWatch').addEventListener('click', async () => {
+  if (state !== 'continue' || contBusy) return;
+  contBusy = true;
+  $('contWatch').disabled = true; $('contWatch').textContent = '広告を読み込み中…';
+  const result = await Ads.showRewarded();
+  if (state !== 'continue') return;
+  if (result === 'unavailable') { $('contNote').textContent = '広告を読み込めませんでした'; setTimeout(giveUp, 2200); return; }
+  if (result !== 'rewarded') { giveUp(); return; }
+  $('continue').style.display = 'none';
+  G.continued = true; G.list = G.listT = 12; G.lastHit = G.elapsed;
+  state = 'play'; document.body.classList.add('playing');
+  msg('応急修理完了！ 傾斜 12° まで復元。戦闘続行！', 'good'); alertMsg('応急修理 完了！');
+});
 $('viewBtn').addEventListener('click', () => { viewOnly = true; $('result').style.display = 'none'; setTimeout(() => { if (state === 'ending') $('result').style.display = 'flex'; }, 15000); });
 
 // ============================================================
@@ -1909,10 +2064,12 @@ let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
-  if (state === 'play') updatePlay(dt);
+  const frozen = (state === 'play' && G.paused) || state === 'continue';
+  if (state === 'continue') updateContinue(dt);
+  else if (state === 'play') { if (!G.paused) updatePlay(dt); }
   else if (state === 'ending') updateEnding(dt);
   else updateTitle(dt);
-  PN.update(dt); PA.update(dt);
+  if (!frozen) { PN.update(dt); PA.update(dt); }
   for (let i = beams.length - 1; i >= 0; i--) {
     const b = beams[i]; b.t += dt;
     const k = Math.max(0, 1 - b.t / 1.8);
