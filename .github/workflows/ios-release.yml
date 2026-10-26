@@ -22,6 +22,11 @@ concurrency:
   group: ios-release
   cancel-in-progress: false
 
+# パイプ（| tail）の途中で失敗しても見逃さないよう、bash を pipefail で動かす
+defaults:
+  run:
+    shell: bash
+
 jobs:
   upload:
     # 既定のブランチ、または手動実行のときだけアップロードする
