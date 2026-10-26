@@ -113,7 +113,7 @@ Android 版と同じ Capacitor のプロジェクトに `ios/` を足して作�
 - Bundle ID は `jp.techgym.yamato`（Android のパッケージ名と同じ）。iPhone 専用・横画面固定・全画面・プレイ中は画面を消さない
 - ホーム画面の名前は日本語の端末で「戦艦大和」、それ以外で「Yamato Ten-Go」
 - 広告ユニットは Android 用と iOS 用で別（`js/ads.js` の `UNITS.android` / `UNITS.ios`）。iOS では同意確認のあとに App Tracking Transparency の確認を出す
-- AdMob の iOS 用アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`（設定済み）。iOS のバナー・インタースティシャルは本番 ID を設定済み、**リワードはまだ空**（空の種類は App Store 版では出さない）
+- AdMob の iOS 用アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`（設定済み）。iOS のバナー・インタースティシャル・リワードとも本番 ID を設定済み
 - App Store 用の画像は `docs/store/ios/`（スクリーンショット 2622 × 1206 日英各 4 枚、ヘッダ 3840 × 1646、検索結果 3840 × 2560）
 - push のたびに `.github/workflows/ios.yml` が、署名なしでシミュレーター向けにビルドできるかを確認する
 - `.github/workflows/ios-release.yml` が、本番広告でビルド・署名し、App Store Connect（TestFlight）へ自動でアップロードする（Secrets はリポジトリに登録済み）
