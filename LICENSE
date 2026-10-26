@@ -45,5 +45,5 @@ by the terms above:
 - Fonts: Noto Serif JP (SIL Open Font License 1.1) is loaded from Google Fonts when online;
   it is not included in this repository.
 
-The Android app also uses Capacitor and @capacitor-community/admob (MIT License), installed
-from npm at build time.
+The Android and iOS apps also use Capacitor and @capacitor-community/admob (MIT License),
+installed from npm at build time.

@@ -1,4 +1,4 @@
-"""アイコンと起動画面を作る。
+"""アイコンと起動画面を作る（Android と iOS）。
 
 assets/ の元画像（1024px のアイコン、2732px の起動画面）を描き、
 android/app/src/main/res/ の各サイズを書き出す。
@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 ASSETS = os.path.join(ROOT, 'assets')
 RES = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res')
+IOS_ASSETS = os.path.join(ROOT, 'ios', 'App', 'App', 'Assets.xcassets')
 FONT = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf'
 
 NAVY_TOP, NAVY_BOT = (34, 46, 64), (10, 14, 20)
@@ -136,6 +137,12 @@ def main():
                 cover(src, ww, hh).save(os.path.join(out, 'splash.png'))
     cover(sp, 320, 480).save(os.path.join(RES, 'drawable', 'splash.png'))
     cover(spd, 320, 240).save(os.path.join(RES, 'drawable-night', 'splash.png'))
+
+    # iOS：アプリアイコン（1024px・透過なし）と起動画面（2732px を 3 枚）
+    if os.path.isdir(IOS_ASSETS):
+        icon.save(os.path.join(IOS_ASSETS, 'AppIcon.appiconset', 'AppIcon-512@2x.png'))
+        for name in ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png']:
+            sp.save(os.path.join(IOS_ASSETS, 'Splash.imageset', name))
     print('icons and splash screens written')
 
 

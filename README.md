@@ -106,6 +106,25 @@ npm run android:open   # Android Studio で開く
 
 バージョン番号（versionCode）は Actions の実行回数が自動で使われます。表示用のバージョン名は `package.json` の `version` です。
 
+## iOS 版（App Store 配布用）
+
+Android 版と同じ Capacitor のプロジェクトに `ios/` を足して作っています（Swift Package Manager の構成。CocoaPods は不要）。
+
+- Bundle ID は `jp.techgym.yamato`（Android のパッケージ名と同じ）。iPhone 専用・横画面固定・全画面・プレイ中は画面を消さない
+- ホーム画面の名前は日本語の端末で「戦艦大和」、それ以外で「Yamato Ten-Go」
+- 広告ユニットは Android 用と iOS 用で別（`js/ads.js` の `UNITS.android` / `UNITS.ios`）。iOS では同意確認のあとに App Tracking Transparency の確認を出す
+- AdMob の iOS 用アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`。**いまは Google のテスト用 ID** で、iOS 用の本番 ID を入れるまで App Store 版では広告を出さない
+- App Store 用の画像は `docs/store/ios/`（スクリーンショット 2622 × 1206 日英各 4 枚、ヘッダ 3840 × 1646、検索結果 3840 × 2560）
+- push のたびに `.github/workflows/ios.yml` が、署名なしでシミュレーター向けにビルドできるかを確認する
+
+Mac でのビルドと App Store への提出の手順は [`docs/IOS_BUILD.md`](docs/IOS_BUILD.md) にあります。
+
+```bash
+npm run ios:sync      # テスト広告で iOS プロジェクトへコピー（実機での確認用）
+npm run ios:release   # 本番広告で iOS プロジェクトへコピー（App Store 用）
+npm run ios:open      # Xcode で開く
+```
+
 ## ライセンス
 
 All rights reserved. 著作権はテックジム株式会社に帰属します。無断での複製・改変・再配布、Web サイトやアプリとしての公開を禁止します。ただし、テックジムの受講生が学習目的で複製・改変することは許可します（商用利用は不可。詳しくは `LICENSE`）。
@@ -124,5 +143,6 @@ scripts/build-web.js     www/ にアプリ同梱用のファイルをまとめ�
 scripts/make-icons.py    アイコンと起動画面を作る
 assets/                  アイコン・起動画面の元画像
 android/                 Android プロジェクト（Capacitor）
+ios/                     iOS プロジェクト（Capacitor・Swift Package Manager）
 capacitor.config.json    Capacitor の設定（appId: jp.techgym.yamato）
 ```
