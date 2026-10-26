@@ -25,8 +25,8 @@ const Ads = (() => {
       },
       // 本番の広告ユニット（AdMob の「戦艦大和 天一号作戦」iOS 用）
       production: {
-        banner: '',
-        interstitial: '',
+        banner: 'ca-app-pub-6411535997477460/8600275167',
+        interstitial: 'ca-app-pub-6411535997477460/4872571112',
         rewarded: '',
       },
     },
