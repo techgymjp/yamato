@@ -116,6 +116,7 @@ Android 版と同じ Capacitor のプロジェクトに `ios/` を足して作�
 - AdMob の iOS 用アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`。**いまは Google のテスト用 ID** で、iOS 用の本番 ID を入れるまで App Store 版では広告を出さない
 - App Store 用の画像は `docs/store/ios/`（スクリーンショット 2622 × 1206 日英各 4 枚、ヘッダ 3840 × 1646、検索結果 3840 × 2560）
 - push のたびに `.github/workflows/ios.yml` が、署名なしでシミュレーター向けにビルドできるかを確認する
+- `.github/workflows/ios-release.yml` が、本番広告でビルド・署名し、App Store Connect（TestFlight）へ自動でアップロードする（Secrets はリポジトリに登録済み）
 
 Mac でのビルドと App Store への提出の手順は [`docs/IOS_BUILD.md`](docs/IOS_BUILD.md) にあります。
 

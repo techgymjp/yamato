@@ -142,10 +142,26 @@ Google の「Apple の App Store のデータ開示要件への準備」（AdMob
 
 ## 7. GitHub Actions
 
-`.github/workflows/ios.yml` が、push のたびに GitHub の Mac 環境で「署名なしでシミュレーター向けにビルドできるか」だけを確認します。
-App Store に出すビルドは、これまでどおり手元の Mac の Xcode で作ります。
+| ワークフロー | 動くとき | すること |
+| --- | --- | --- |
+| `.github/workflows/ios.yml` | push のたび | 署名なしでシミュレーター向けにビルドできるかを確認する |
+| `.github/workflows/ios-release.yml` | 既定のブランチへの push、または Actions の画面から手動実行 | **本番広告の設定でビルドし、配布用の証明書で署名して App Store Connect（TestFlight）にアップロードする** |
 
-アップロードまで自動にしたい場合は、JET STRIKE の `docs/IOS_BUILD.md` の 7 章（API キーと配布用証明書を GitHub Secrets に登録する）を済ませてから、Claude Code に「iOS の自動アップロードのワークフローを作って」と頼みます。Organization secrets に登録済みなら、このリポジトリでもそのまま使えます。
+`ios-release.yml` を使うと、3 章（Mac での Archive とアップロード）は不要になります。ビルド番号はワークフローの実行回数が自動で使われます。審査への提出は、これまでどおり App Store Connect で行います（5 章）。
+
+使う Secrets はこのリポジトリ（https://github.com/techgymjp/yamato/settings/secrets/actions ）に登録済みです。techgymjp は個人アカウントなので、組織の Secrets は使えません。ゲームごとにリポジトリへ登録します。
+
+| 名前 | 内容 |
+| --- | --- |
+| `IOS_DIST_CERT_P12_BASE64` | 配布用の証明書（.p12）を `base64 -i 証明書.p12 \| tr -d '\n' \| pbcopy` で変換した文字列 |
+| `IOS_DIST_CERT_PASSWORD` | .p12 を書き出したときのパスワード |
+| `ASC_KEY_ID` | App Store Connect の API キーのキー ID（「ユーザとアクセス」→「統合」→「App Store Connect API」→「チームキー」） |
+| `ASC_ISSUER_ID` | 同じページの上にある Issuer ID |
+| `ASC_KEY_P8_BASE64` | API キー（.p8）を `base64 -i ~/Desktop/AuthKey_*.p8 \| tr -d '\n' \| pbcopy` で変換した文字列 |
+
+証明書・パスワード・API キーは、チャット・AI へのアップロード・リポジトリへのコミットで**絶対に共有しない**でください。誤って共有したら、App Store Connect で API キーを取り消し、証明書も取り消して作り直します。
+
+アップロードが失敗したときは、Actions の実行結果のログを確認します。App Store Connect にアプリ（Bundle ID `jp.techgym.yamato`）をまだ作っていないと、アップロードの段階で失敗します。
 
 ---
 

@@ -1,0 +1,124 @@
+name: iOS release (TestFlight)
+
+# 本番広告の設定で iOS 版をビルドし、App Store Connect（TestFlight）にアップロードする。
+# 審査への提出は App Store Connect で行う（docs/IOS_BUILD.md）。
+# 必要な Secrets：IOS_DIST_CERT_P12_BASE64 / IOS_DIST_CERT_PASSWORD / ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'js/**'
+      - 'assets/**'
+      - 'ios/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/ios-release.yml'
+  workflow_dispatch:
+
+# アップロードは順番に行う（同じビルド番号を二重に上げないため、実行中のものは取り消さない）
+concurrency:
+  group: ios-release
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    # 既定のブランチ、または手動実行のときだけアップロードする
+    if: github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      HAS_SECRETS: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.ASC_KEY_P8_BASE64 != '' }}
+      # ビルド番号はこのワークフローの実行回数（アップロードのたびに必ず増える）
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - name: Check secrets
+        if: env.HAS_SECRETS != 'true'
+        run: |
+          echo "::error::iOS の Secrets が登録されていません（docs/IOS_BUILD.md の 7 章）"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        timeout-minutes: 5
+        run: npm ci
+
+      - name: Copy web assets into the iOS project (production ads)
+        run: npm run ios:release
+
+      # 配布用の証明書を、このジョブ専用のキーチェーンに読み込む
+      - name: Import the distribution certificate
+        env:
+          P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$P12_PASSWORD" -f pkcs12 -A -t cert
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/dist.p12"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
+      - name: Write the App Store Connect API key
+        env:
+          P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          echo "$P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      # 署名なしでアーカイブし、書き出し（export）のときに配布用の証明書で署名する。
+      # App Store 用のプロビジョニングプロファイルは、API キーを使って自動で作られる
+      - name: Archive
+        working-directory: ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive | tail -40
+
+      - name: Sign and upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>GNM3VTX9YG</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            | tail -60
+          echo "ビルド $BUILD_NUMBER を App Store Connect にアップロードしました（TestFlight に出るまで 10〜30 分）" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain-db" 2> /dev/null || true
+          rm -f "$RUNNER_TEMP"/AuthKey_*.p8
