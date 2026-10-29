@@ -28,6 +28,7 @@ const I18N = (() => {
       'title.note': '※ レールガンとミサイルはゲーム独自の架空兵装です。出撃時刻、艦隊編成、左舷への集中攻撃、14時23分の沈没などは史実に基づいています。',
       'legal.privacy': 'プライバシーポリシー',
       'legal.adSettings': '広告の設定',
+      'store.get': 'Android アプリ版', 'store.lead': 'スマホアプリ版もあります',
       'url.privacy': 'https://techgym.jp/privacy-policy/',
 
       'hud.date': '昭和20年4月7日　曇・低雲',
@@ -131,6 +132,7 @@ const I18N = (() => {
       'title.note': '* The railgun and missiles are fictional weapons for this game. The sortie times, fleet composition, the concentrated attack on the port side and the sinking at 14:23 are based on history.',
       'legal.privacy': 'Privacy Policy',
       'legal.adSettings': 'Ad settings',
+      'store.get': 'Get the Android app', 'store.lead': 'Also available as a phone app',
       'url.privacy': 'https://techgym.jp/privacy-policy-en/',
 
       'hud.date': 'April 7, 1945 — overcast, low clouds',

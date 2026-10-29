@@ -37,6 +37,9 @@ BGM はゲーム内で合成するオリジナルの管弦楽風楽曲です。
 
 ## Android 版（Google Play 配布用）
 
+Google Play: https://play.google.com/store/apps/details?id=jp.techgym.yamato
+（Web 版のタイトル画面と結果画面にも、このページへのリンクを表示しています。アプリ版では表示しません）
+
 [Capacitor](https://capacitorjs.com/) でゲームのファイルをアプリ内に同梱しているため、ネットにつながっていなくても遊べます（Three.js も `js/vendor/` に同梱）。
 
 - 横画面固定・全画面表示（ステータスバー／ナビゲーションバーを隠す）

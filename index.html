@@ -66,7 +66,19 @@
   html[lang=en] .title{letter-spacing:.03em;font-size:clamp(28px,4.4vw,44px)}
   html[lang=en] .title small{letter-spacing:.2em}
   html[lang=en] #br{width:300px}
-  .langSel{display:flex;gap:8px;margin:10px 0 0}
+  .langSel{display:flex;gap:8px;margin:10px 0 0;align-items:center;flex-wrap:wrap}
+  /* ストアへのリンク（Web 版だけ表示。アプリ版では隠す） */
+  .storeLink{display:inline-flex;align-items:center;gap:8px;margin-left:auto;padding:5px 14px 5px 10px;border:1px solid #6b6b6b;border-radius:8px;
+    background:#000;color:#fff;text-decoration:none;line-height:1.1}
+  .storeLink:hover{background:#1a1a1a}
+  .storeLink .gp{font-size:18px;background:linear-gradient(135deg,#00d4ff,#00e676 40%,#ffd400 70%,#ff3d57);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .storeLink small{display:block;font-size:10px;letter-spacing:.05em;color:#ccc}
+  .storeLink b{display:block;font-size:15px;font-family:system-ui,sans-serif;letter-spacing:.02em}
+  #title .box{position:relative}
+  .storeLink.corner{position:absolute;top:22px;right:28px;margin:0}
+  .storeRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 0;font-size:13px;color:var(--dim)}
+  .storeRow .storeLink{margin-left:0}
+  body.app .storeLink, body.app .storeRow{display:none!important}
   .langSel .langBtn{font-size:13px;padding:5px 14px;border-radius:16px;letter-spacing:.05em}
   .langSel .langBtn.on{background:#7a1f16;border-color:#c0473a;font-weight:900}
   .legal{font-size:12px;color:var(--dim);margin:10px 0 0}
@@ -181,6 +193,7 @@
 
 <div id="title" class="panel">
   <div class="box">
+    <a class="storeLink corner" href="https://play.google.com/store/apps/details?id=jp.techgym.yamato" target="_blank" rel="noopener"><span class="gp">▶</span><span><small data-i18n="store.get">Android アプリ版</small><b>Google Play</b></span></a>
     <h1 class="title"><small data-i18n="title.date">昭和二十年四月七日</small><span data-i18n-html="title.name">戦艦大和<br>天一号作戦</span></h1>
     <p class="lead" data-i18n-html="title.lead"></p>
     <div class="rule" data-i18n-html="title.rule"></div>
@@ -237,6 +250,7 @@
     <div class="stats" id="resStats"></div>
     <p class="hist" id="resHist"></p>
     <div class="btns"><button class="main" id="againBtn" data-i18n="res.again">再び出撃</button><button id="viewBtn" data-i18n="res.view">艦影を眺める</button></div>
+    <p class="storeRow"><span data-i18n="store.lead">スマホアプリ版もあります</span><a class="storeLink" href="https://play.google.com/store/apps/details?id=jp.techgym.yamato" target="_blank" rel="noopener"><span class="gp">▶</span><span><small data-i18n="store.get">Android アプリ版</small><b>Google Play</b></span></a></p>
     <div class="share">
       <span data-i18n="share.label">結果をシェア</span>
       <button data-share="x">X（Twitter）</button><button data-share="line">LINE</button><button data-share="fb">Facebook</button>
