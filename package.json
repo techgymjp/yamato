@@ -1,6 +1,6 @@
 {
   "name": "yamato",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "戦艦大和 天一号作戦 艦長目線の 3D 対空戦闘ゲーム（Web / Android / iOS）",
   "scripts": {

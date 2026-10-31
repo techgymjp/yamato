@@ -291,9 +291,12 @@ const tmpV = V3(), tmpV2 = V3();
 // ============================================================
 //  レンダラー・シーン
 // ============================================================
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// スマホ・タブレット（とアプリ版）は描画を軽くする：解像度・影・海面の細かさ・粒子の数
+const LOW_END = matchMedia('(pointer:coarse)').matches || !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const MAX_PR = Math.min(devicePixelRatio, LOW_END ? 1.5 : 2);
+const renderer = new THREE.WebGLRenderer({ antialias: !LOW_END, powerPreference: 'high-performance' });
+renderer.setPixelRatio(LOW_END ? Math.min(MAX_PR, 1.25) : MAX_PR);
+renderer.shadowMap.enabled = !LOW_END; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(innerWidth, innerHeight);
 $('game').appendChild(renderer.domElement);
 
@@ -375,7 +378,7 @@ const oceanMat = new THREE.ShaderMaterial({
       float f = smoothstep(uFogNear, uFogFar, dist);
       gl_FragColor = vec4(mix(col, uFogColor, f), 1.0); }`
 });
-const OCEAN_SIZE = 20000, OCEAN_SEG = 400;
+const OCEAN_SIZE = 20000, OCEAN_SEG = LOW_END ? 200 : 400;
 const ocean = new THREE.Mesh(new THREE.PlaneGeometry(OCEAN_SIZE, OCEAN_SIZE, OCEAN_SEG, OCEAN_SEG).rotateX(-Math.PI / 2), oceanMat);
 ocean.frustumCulled = false;
 scene.add(ocean);
@@ -424,11 +427,12 @@ class Particles {
     g.setAttribute('position', this.aPos); g.setAttribute('pcolor', this.aCol);
     g.setAttribute('alpha', this.aAlpha); g.setAttribute('psize', this.aSize);
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { uScale: { value: innerHeight * 0.85 }, uFogColor: { value: fogColor }, uFogNear: { value: FOG_NEAR }, uFogFar: { value: FOG_FAR }, uAdd: { value: additive ? 1 : 0 } },
-      vertexShader: `attribute float alpha; attribute float psize; attribute vec3 pcolor; uniform float uScale; uniform float uFogNear; uniform float uFogFar;
+      // uMaxSize：カメラの目の前の煙が画面いっぱいに広がると重くなるので、粒の大きさに上限を付ける
+      uniforms: { uScale: { value: innerHeight * 0.85 }, uMaxSize: { value: LOW_END ? 160 : 400 }, uFogColor: { value: fogColor }, uFogNear: { value: FOG_NEAR }, uFogFar: { value: FOG_FAR }, uAdd: { value: additive ? 1 : 0 } },
+      vertexShader: `attribute float alpha; attribute float psize; attribute vec3 pcolor; uniform float uScale; uniform float uMaxSize; uniform float uFogNear; uniform float uFogFar;
         varying float vA; varying vec3 vC; varying float vFog;
         void main(){ vec4 mv = modelViewMatrix*vec4(position,1.0); gl_Position = projectionMatrix*mv;
-          gl_PointSize = psize*uScale/max(-mv.z,1.0); vA = alpha; vC = pcolor; vFog = smoothstep(uFogNear,uFogFar,-mv.z); }`,
+          gl_PointSize = min(psize*uScale/max(-mv.z,1.0), uMaxSize); vA = alpha; vC = pcolor; vFog = smoothstep(uFogNear,uFogFar,-mv.z); }`,
       fragmentShader: `uniform vec3 uFogColor; uniform float uAdd; varying float vA; varying vec3 vC; varying float vFog;
         void main(){ vec2 c = gl_PointCoord-0.5; float d = length(c); if(d>0.5) discard;
           float s = smoothstep(0.5,0.05,d); vec3 col = mix(vC, uFogColor, vFog*(1.0-uAdd));
@@ -459,8 +463,8 @@ class Particles {
     this.aPos.needsUpdate = this.aCol.needsUpdate = this.aAlpha.needsUpdate = this.aSize.needsUpdate = true;
   }
 }
-const PN = new Particles(11000, false);   // 煙・泡・水柱
-const PA = new Particles(9000, true);     // 炎・閃光・曳光弾
+const PN = new Particles(LOW_END ? 7000 : 11000, false);   // 煙・泡・水柱
+const PA = new Particles(LOW_END ? 5000 : 9000, true);     // 炎・閃光・曳光弾
 
 function explosion(p, s = 1, smoke = true) {
   for (let i = 0; i < 26 * Math.min(s, 3); i++) {
@@ -916,8 +920,15 @@ const AU = {
   init() {
     if (this.ctx) return;
     try {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.master = this.ctx.createGain(); this.master.gain.value = 0.55; this.master.connect(this.ctx.destination);
+      const AC = window.AudioContext || window.webkitAudioContext;
+      // 'playback' は再生用の大きめのバッファ。スマホで音が途切れる・割れるのを防ぐ
+      try { this.ctx = new AC({ latencyHint: 'playback' }); } catch (e) { this.ctx = new AC(); }
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.45;
+      // リミッター：爆発が重なっても音量が頭打ちになり、割れない
+      const lim = this.ctx.createDynamicsCompressor();
+      lim.threshold.value = -10; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
+      this.master.connect(lim); lim.connect(this.ctx.destination);
+      this.voices = 0;
       const len = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate), d = buf.getChannelData(0);
       let last = 0; for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = i % 2 ? w : last * 3.5; }
       this.noiseBuf = buf;
@@ -934,11 +945,14 @@ const AU = {
     } catch (e) { this.ctx = null; }
   },
   noise(dur, f0, f1, gain, type = 'lowpass', q = 0.7) {
-    if (!this.ctx) return; const c = this.ctx, t = c.currentTime;
+    if (!this.ctx) return;
+    // 同時に鳴る効果音の数を制限する（スマホの処理が追いつかず音が途切れるのを防ぐ）
+    if (this.voices >= (LOW_END ? 10 : 18) && gain < 0.5) return;
+    this.voices++; const c = this.ctx, t = c.currentTime;
     const s = c.createBufferSource(); s.buffer = this.noiseBuf; s.playbackRate.value = rand(0.8, 1.2);
     const f = c.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
     const g = c.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-    s.connect(f); f.connect(g); g.connect(this.master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+    s.connect(f); f.connect(g); g.connect(this.master); s.onended = () => { this.voices--; }; s.start(t, Math.random()); s.stop(t + dur + 0.05);
   },
   tone(type, f0, f1, dur, gain, delay = 0) {
     if (!this.ctx) return; const c = this.ctx, t = c.currentTime + delay;
@@ -975,7 +989,7 @@ const BGM = {
     if (!AU.ctx || this.playing) return;
     const c = AU.ctx; this.playing = true;
     this.out = c.createGain(); this.out.gain.value = this.on ? 0.33 : 0;
-    const rev = c.createConvolver(), len = c.sampleRate * 3.8, buf = c.createBuffer(2, len, c.sampleRate);
+    const rev = c.createConvolver(), len = c.sampleRate * (LOW_END ? 2.2 : 3.6), buf = c.createBuffer(2, len, c.sampleRate);
     for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
     rev.buffer = buf;
     const wet = c.createGain(); wet.gain.value = 0.6;
@@ -1014,7 +1028,7 @@ const BGM = {
     // 弦楽（パッド）
     ch.forEach((n, k) => {
       const g = k === 0 ? 0.05 : 0.026;
-      for (const dt of [-7, 7]) this.voice('sawtooth', this.hz(n), t, B - 0.2, g, k === 0 ? 500 : 1300, 1.0, 1.6, dt);
+      for (const dt of (LOW_END ? [0] : [-7, 7])) this.voice('sawtooth', this.hz(n), t, B - 0.2, LOW_END ? g * 1.6 : g, k === 0 ? 500 : 1300, 1.0, 1.6, dt);
     });
     // コントラバス
     this.voice('triangle', this.hz(ch[0] - 12), t, B - 0.3, 0.12, 300, 0.4, 1.0);
@@ -1661,7 +1675,7 @@ function updatePlay(dt) {
     let nd = 1e9; for (const pl of alive) nd = Math.min(nd, pl.pos.distanceTo(G.pos));
     AU.droneGain.gain.value = lerp(AU.droneGain.gain.value, clamp(1 - nd / 2500, 0, 1) * 0.06, dt * 2);
     G.mgSnd -= dt;
-    if (G.mgActive > 0 && G.mgSnd <= 0) { G.mgSnd = 0.07; AU.mg(G.mgActive); }
+    if (G.mgActive > 0 && G.mgSnd <= 0) { G.mgSnd = LOW_END ? 0.12 : 0.08; AU.mg(G.mgActive); }
   }
   updateHUD();
 }
@@ -1943,7 +1957,20 @@ function updateTitle(dt) {
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => {
   diff = +b.dataset.diff; document.querySelectorAll('[data-diff]').forEach(x => x.classList.toggle('sel', x === b));
 }));
+// 爆発やレールガンを初めて描いたときに一瞬止まらないよう、シェーダーを先に用意しておく
+let warmed = false;
+function warmUp() {
+  if (warmed) return; warmed = true;
+  const g = new THREE.Group();
+  [4, 11, 26].forEach((r, i) => g.add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, 10, 8, 1, true), beamMats[i].clone())));
+  for (const type of Object.keys(PLANE_TYPES)) g.add(makePlane(type));
+  g.add(new THREE.Mesh(bombGeo, MAT.black), new THREE.Mesh(rocketGeo, MAT.dark));
+  g.position.copy(ship.position); scene.add(g);
+  try { renderer.compile(scene, camera); } catch (e) { /* 失敗しても描画時に用意される */ }
+  scene.remove(g);
+}
 function startGame() {
+  warmUp();
   AU.init(); BGM.start(); BGM.fade(0.33, 0.5);
   newGame();
   $('title').style.display = 'none'; $('result').style.display = 'none'; delete $('result').dataset.shown;
@@ -1966,10 +1993,10 @@ function shareText() {
 }
 if (navigator.share && !NATIVE) $('nativeShare').style.display = '';
 document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click', async () => {
-  const text = shareText(), u = encodeURIComponent(SHARE_URL), t = encodeURIComponent(text);
+  const text = shareText(), u = encodeURIComponent(SHARE_URL), q = encodeURIComponent(text);
   const kind = b.dataset.share;
-  if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${t}&url=${u}`, '_blank', 'noopener');
-  else if (kind === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${u}&text=${t}`, '_blank', 'noopener');
+  if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${q}&url=${u}`, '_blank', 'noopener');
+  else if (kind === 'line') window.open(`https://social-plugins.line.me/lineit/share?url=${u}&text=${q}`, '_blank', 'noopener');
   else if (kind === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'noopener');
   else if (kind === 'app') {
     const sh = plugin('Share');
@@ -2087,9 +2114,22 @@ $('viewBtn').addEventListener('click', () => {
 //  メインループ
 // ============================================================
 let last = performance.now();
+// 動きが重い端末では、描画の解像度を自動で下げる（軽い状態が続けば戻す）
+const PERF = { acc: 0, n: 0, pr: renderer.getPixelRatio() };
+function adaptResolution(rawDt) {
+  PERF.acc += rawDt; PERF.n++;
+  if (PERF.acc < 2) return;
+  const avg = PERF.acc / PERF.n; PERF.acc = 0; PERF.n = 0;
+  let pr = PERF.pr;
+  if (avg > 1 / 45) pr = Math.max(0.75, pr - 0.15);
+  else if (avg < 1 / 57) pr = Math.min(LOW_END ? Math.min(MAX_PR, 1.25) : MAX_PR, pr + 0.1);
+  if (Math.abs(pr - PERF.pr) > 0.01) { PERF.pr = pr; renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); }
+}
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  const rawDt = (now - last) / 1000;
+  const dt = Math.min(0.05, rawDt); last = now; T += dt;
+  if (!document.hidden && rawDt < 0.5) adaptResolution(rawDt);
   const frozen = (state === 'play' && G.paused) || state === 'continue';
   if (state === 'continue') updateContinue(dt);
   else if (state === 'play') { if (!G.paused) updatePlay(dt); }
