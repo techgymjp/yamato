@@ -178,5 +178,6 @@ Google の「Apple の App Store のデータ開示要件への準備」（AdMob
 | 実行先に iPhone が出ない | ケーブルをつなぎ直し、iPhone で「信頼」を許可。デベロッパモードをオンにする |
 | 実行先に「iOS 26.x Not Installed」と出る | 「Get」で iOS のシミュレーターと部品をダウンロードする（8 GB ほど。Archive にも必要） |
 | ビルドが古いゲームのまま | `npm run ios:sync`（または `ios:release`）を実行し忘れている。`git pull` してから実行し直す |
+| Guideline 5.6（審査中に隠した機能）でリジェクト | Web 版だけの部分（Google Play へのリンクなど）がアプリに入っていると起きる。`npm run build:app` で取り除いたビルドに差し替え、App Review への返信で「Web 版用のリンクとそれを隠す処理がバンドルに入っていたので取り除いた。審査中と審査後で機能は同じ」と説明する（実機の画面録画を添えるとよい） |
 | 本番広告とテスト広告の取り違え | App Store 用は必ず `npm run ios:release`。Xcode から実機で試すときは `npm run ios:sync` に戻す |
 | App Store の審査で「Xcode が古い」と言われる | Xcode を最新版に更新してから Archive し直す |

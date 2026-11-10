@@ -38,7 +38,13 @@ BGM はゲーム内で合成するオリジナルの管弦楽風楽曲です。
 ## Android 版（Google Play 配布用）
 
 Google Play: https://play.google.com/store/apps/details?id=jp.techgym.yamato
-（Web 版のタイトル画面の右上と結果画面に、このページへのテキストリンク「Android アプリ版（Google Play）」を表示しています。新しいタブで開き、アプリ版では表示しません）
+（Web 版のタイトル画面の右上と結果画面に、このページへのテキストリンク「Android アプリ版（Google Play）」を表示しています。新しいタブで開きます）
+
+### Web 版だけの部分はアプリに入れない
+
+Google Play へのリンクや Web 用のシェアボタン（X・LINE・Facebook・リンクのコピー）は、`index.html` と `js/i18n.js` の中で目印（HTML は `<!-- web-only -->` 〜 `<!-- /web-only -->`、CSS は `/* web-only:start */` 〜 `/* web-only:end */`、JS は `// web-only:start` 〜 `// web-only:end`）で囲んでいます。
+アプリ用のビルド `npm run build:app`（`android:sync` / `ios:sync` / `ios:release` と GitHub Actions が使う）は、この範囲を取り除いて `www/` に入れ、ストアへのリンクが残っていたらビルドを止めます。
+アプリの中で隠しているだけの機能は、iOS の審査で「審査中に隠した機能」（Guideline 5.6）と見なされることがあるためです。Web 版の公開（Vercel）は従来どおり `npm run build` です。
 
 [Capacitor](https://capacitorjs.com/) でゲームのファイルをアプリ内に同梱しているため、ネットにつながっていなくても遊べます（Three.js も `js/vendor/` に同梱）。
 

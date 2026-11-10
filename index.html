@@ -68,12 +68,13 @@
   html[lang=en] #br{width:300px}
   .langSel{display:flex;gap:8px;margin:10px 0 0;align-items:center;flex-wrap:wrap}
   /* ストアへのリンク（Web 版だけ表示。アプリ版では隠す） */
+  /* web-only:start（アプリ用のビルドでは取り除く：scripts/build-web.js） */
   .storeLink{color:#9fd3ff;text-decoration:underline;text-underline-offset:3px;font-size:14px;white-space:nowrap}
   .storeLink:hover{color:#cfe8ff}
   #title .box{position:relative}
   .storeLink.corner{position:absolute;top:24px;right:28px}
   .storeRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 0;font-size:13px;color:var(--dim)}
-  body.app .storeLink, body.app .storeRow{display:none!important}
+  /* web-only:end */
   .langSel .langBtn{font-size:13px;padding:5px 14px;border-radius:16px;letter-spacing:.05em}
   .langSel .langBtn.on{background:#7a1f16;border-color:#c0473a;font-weight:900}
   .legal{font-size:12px;color:var(--dim);margin:10px 0 0}
@@ -109,9 +110,11 @@
   .share{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
   .share span{font-size:13px;color:var(--dim);margin-right:4px}
   .share button{font-size:14px;padding:8px 14px}
+  /* web-only:start */
   .share button[data-share="x"]{background:#111;border-color:#555}
   .share button[data-share="line"]{background:#06a046;border-color:#2fc26a}
   .share button[data-share="fb"]{background:#1d5bbf;border-color:#4b82e0}
+  /* web-only:end */
 
   #touch{position:fixed;left:0;right:0;bottom:190px;display:none;justify-content:space-between;padding:0 12px;pointer-events:none}
   #touch .grp{display:flex;gap:8px;pointer-events:auto}
@@ -188,7 +191,9 @@
 
 <div id="title" class="panel">
   <div class="box">
+    <!-- web-only -->
     <a class="storeLink corner" href="https://play.google.com/store/apps/details?id=jp.techgym.yamato" target="_blank" rel="noopener" data-i18n="store.link">Android アプリ版（Google Play）</a>
+    <!-- /web-only -->
     <h1 class="title"><small data-i18n="title.date">昭和二十年四月七日</small><span data-i18n-html="title.name">戦艦大和<br>天一号作戦</span></h1>
     <p class="lead" data-i18n-html="title.lead"></p>
     <div class="rule" data-i18n-html="title.rule"></div>
@@ -245,11 +250,15 @@
     <div class="stats" id="resStats"></div>
     <p class="hist" id="resHist"></p>
     <div class="btns"><button class="main" id="againBtn" data-i18n="res.again">再び出撃</button><button id="viewBtn" data-i18n="res.view">艦影を眺める</button></div>
+    <!-- web-only -->
     <p class="storeRow"><span data-i18n="store.lead">スマホアプリ版もあります</span><a class="storeLink" href="https://play.google.com/store/apps/details?id=jp.techgym.yamato" target="_blank" rel="noopener" data-i18n="store.link">Android アプリ版（Google Play）</a></p>
+    <!-- /web-only -->
     <div class="share">
       <span data-i18n="share.label">結果をシェア</span>
+      <!-- web-only -->
       <button data-share="x">X（Twitter）</button><button data-share="line">LINE</button><button data-share="fb">Facebook</button>
       <button data-share="copy" data-i18n="share.copy">リンクをコピー</button><button data-share="native" id="nativeShare" style="display:none" data-i18n="share.more">その他…</button>
+      <!-- /web-only -->
       <button data-share="app" id="appShare" style="display:none" data-i18n="share.app">シェアする</button>
     </div>
   </div>
@@ -1986,7 +1995,7 @@ function shareText() {
   const head = G.endCause === 'win' ? t('share.win') : t('share.sunk', { n: G.dist.toFixed(0) });
   return `${head}\n${t('share.stats', { k: kills, c: G.csunk, t: G.torpHits, d: G.dodged })}\n${t('share.tag')}`;
 }
-if (navigator.share && !NATIVE) $('nativeShare').style.display = '';
+if (navigator.share && !NATIVE && $('nativeShare')) $('nativeShare').style.display = '';
 document.querySelectorAll('[data-share]').forEach(b => b.addEventListener('click', async () => {
   const text = shareText(), u = encodeURIComponent(SHARE_URL), q = encodeURIComponent(text);
   const kind = b.dataset.share;
