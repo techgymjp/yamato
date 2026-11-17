@@ -38,4 +38,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 横画面固定（sensorLandscape）にすると「横画面のハードウェアが必須」と自動で申告され、
+         Google Play で一部の端末（Chromebook など）に配信されなくなるため、必須ではないと明示する -->
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
 </manifest>
