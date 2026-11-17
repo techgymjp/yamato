@@ -12,7 +12,7 @@ const Ads = (() => {
       },
       // 本番の広告ユニット（AdMob の「戦艦大和 天一号作戦」Android 用）
       production: {
-        banner: 'ca-app-pub-6411535997477460/7501309310',
+        banner: 'ca-app-pub-6411535997477460/5010218206',
         interstitial: 'ca-app-pub-6411535997477460/8622819293',
         rewarded: 'ca-app-pub-6411535997477460/4683574289',
       },
